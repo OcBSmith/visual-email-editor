@@ -25,37 +25,117 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return false;
 });
 
-// Insert HTML while preserving the signature
+/**
+ * Converts a Base64 data URI to a File object
+ */
+function base64ToFile(base64Data, filename) {
+  const parts = base64Data.split(';base64,');
+  const contentType = parts[0].split(':')[1];
+  const raw = atob(parts[1]);
+  const rawLength = raw.length;
+  const uInt8Array = new Uint8Array(rawLength);
+
+  for (let i = 0; i < rawLength; ++i) {
+    uInt8Array[i] = raw.charCodeAt(i);
+  }
+
+  return new File([uInt8Array], filename, { type: contentType });
+}
+
+/**
+ * Generate a unique Content-ID for inline images
+ */
+function generateContentId() {
+  return `img${Date.now()}${Math.random().toString(36).substr(2, 9)}@visualeditor`;
+}
+
+/**
+ * Process HTML to find base64 images, convert them to inline attachments
+ * with proper Content-ID references
+ */
+async function processInlineImages(html, tabId) {
+  // Match img tags with base64 src
+  const imgRegex = /<img([^>]*)src="(data:image\/([^;]+);base64,([^"]+))"([^>]*)>/gi;
+  let processedHtml = html;
+  let imageCount = 0;
+  const processedImages = [];
+
+  // Find all base64 images first
+  let match;
+  while ((match = imgRegex.exec(html)) !== null) {
+    processedImages.push({
+      fullMatch: match[0],
+      beforeSrc: match[1],
+      dataUri: match[2],
+      extension: match[3],
+      base64Data: match[4],
+      afterSrc: match[5]
+    });
+  }
+
+  console.log(`Found ${processedImages.length} base64 images to process`);
+
+  // Process each image
+  for (const img of processedImages) {
+    const contentId = generateContentId();
+    const filename = `image_${imageCount}.${img.extension}`;
+
+    console.log(`Processing image ${imageCount}: ${filename}, CID: ${contentId}`);
+
+    try {
+      const fileObj = base64ToFile(img.dataUri, filename);
+
+      // Add attachment with contentId for inline display
+      await browser.compose.addAttachment(tabId, {
+        file: fileObj,
+        name: filename,
+        contentId: contentId  // This makes it an inline attachment
+      });
+
+      // Replace the data URI with cid: reference
+      processedHtml = processedHtml.replace(
+        img.dataUri,
+        `cid:${contentId}`
+      );
+
+      console.log(`Image ${imageCount} attached with CID: ${contentId}`);
+      imageCount++;
+    } catch (e) {
+      console.error(`Failed to process image ${imageCount}:`, e);
+      // Keep the original base64 if attachment fails
+    }
+  }
+
+  return { html: processedHtml, count: imageCount };
+}
+
+// Insert HTML while preserving the signature and handling inline images
 async function insertHtmlToCompose(html) {
   console.log("Inserting HTML to compose, length:", html.length);
 
   try {
-    // Count base64 images
-    const base64Count = (html.match(/data:image\/[^;]+;base64,/gi) || []).length;
-    console.log("Base64 images:", base64Count);
-
     // Step 1: Create empty compose window first (this will include the signature)
     const tab = await browser.compose.beginNew({
       deliveryFormat: "html"
     });
     console.log("Compose window created, tab:", tab.id);
 
-    // Step 2: Wait a moment for the window to initialize with signature
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Step 2: Wait a moment for the window to initialize
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     // Step 3: Get current compose details (includes signature)
     const details = await browser.compose.getComposeDetails(tab.id);
     console.log("Got compose details, body length:", details.body?.length || 0);
 
-    // Step 4: Combine our HTML with the existing signature
-    let finalBody = html;
+    // Step 4: Process inline images BEFORE setting body
+    const { html: processedHtml, count: attachmentCount } = await processInlineImages(html, tab.id);
+    console.log(`Processed ${attachmentCount} inline images`);
+
+    // Step 5: Combine our HTML with the existing signature
+    let finalBody = processedHtml;
 
     if (details.body) {
-      // Extract the body content from the existing compose (might have signature)
       const existingBody = details.body;
-
-      // Check if there's meaningful content (signature)
-      // Signatures often have separator like "-- " or specific patterns
       const signaturePatterns = [
         /<div[^>]*class="[^"]*signature[^"]*"[^>]*>/i,
         /<div[^>]*id="[^"]*signature[^"]*"[^>]*>/i,
@@ -65,36 +145,33 @@ async function insertHtmlToCompose(html) {
 
       let hasSignature = signaturePatterns.some(pattern => pattern.test(existingBody));
 
-      // If no pattern found, check if there's any non-empty content
       if (!hasSignature) {
         const strippedContent = existingBody.replace(/<[^>]*>/g, '').trim();
         hasSignature = strippedContent.length > 0;
       }
 
       if (hasSignature) {
-        // Insert our HTML before the signature
-        // Try to find where the body content ends (before signature)
-        // Most signatures are at the end, so we append our content at the start
         console.log("Signature detected, preserving it");
-
-        // Check if existing body has a wrapper
         if (existingBody.includes('<body')) {
-          // Insert our content after body tag, before existing content
-          finalBody = existingBody.replace(/(<body[^>]*>)/i, `$1${html}`);
+          finalBody = existingBody.replace(/(<body[^>]*>)/i, `$1${processedHtml}`);
         } else {
-          // Just prepend our HTML
-          finalBody = html + '<br><br>' + existingBody;
+          finalBody = processedHtml + '<br><br>' + existingBody;
         }
       }
     }
 
-    // Step 5: Set the combined body
+    // Step 6: Set the body with CID references
     await browser.compose.setComposeDetails(tab.id, {
       body: finalBody
     });
-    console.log("Body set with preserved signature, length:", finalBody.length);
 
-    return { success: true, newCompose: true, embeddedImages: base64Count };
+    console.log("Email body set successfully with inline images");
+
+    return {
+      success: true,
+      newCompose: true,
+      inlineImages: attachmentCount
+    };
 
   } catch (error) {
     console.error("Error inserting HTML:", error);

@@ -148,31 +148,38 @@ const AI_SERVICE = {
         return this.complete([
             {
                 role: 'system',
-                content: `You are an expert email designer. Generate complete and functional MJML code based on the user's description.
+                content: `You are an expert email designer. Generate complete MJML v4 code based on the user's description.
 
 The style should be: ${styles[style] || style}
 
-RULES:
-1. Respond ONLY with the MJML code, no explanations
-2. Always include: mj-head with styles, mj-body, mj-section, mj-column
-3. Use modern and attractive colors
-4. Include mj-button for calls to action
-5. The code must be complete and valid
-6. Use English for the content unless otherwise specified
-7. Include placeholders for images using https://via.placeholder.com
+CRITICAL RULES:
+1. Respond ONLY with the MJML code, no explanations or markdown
+2. Use MJML v4 syntax ONLY (no mj-container, no mj-invoice, no deprecated tags)
+3. Always start with <mjml> and end with </mjml>
+4. Structure: <mjml><mj-head>...</mj-head><mj-body>...</mj-body></mjml>
+5. Use mj-section, mj-column, mj-text, mj-button, mj-image
+6. Use modern colors (hex codes like #4F46E5, #10B981, #1E293B)
+7. Include mj-button for calls to action with href="#"
+8. For images use: https://via.placeholder.com/600x300
 
-Example structure:
+REQUIRED STRUCTURE:
 <mjml>
   <mj-head>
-    <mj-attributes>...</mj-attributes>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+    </mj-attributes>
   </mj-head>
-  <mj-body>
-    <mj-section>...</mj-section>
+  <mj-body background-color="#f4f4f4">
+    <mj-section background-color="#ffffff">
+      <mj-column>
+        <mj-text>Content here</mj-text>
+      </mj-column>
+    </mj-section>
   </mj-body>
 </mjml>`
             },
             { role: 'user', content: `Generate an email: ${description}` }
-        ], { maxTokens: 4096, temperature: 0.8 });
+        ], { maxTokens: 4096, temperature: 0.7 });
     }
 };
 

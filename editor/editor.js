@@ -154,56 +154,230 @@ const editor = grapesjs.init({
     }
 });
 
-// ===== INITIAL MJML TEMPLATE =====
-const initialTemplate = `
+// ===== TEMPLATE LIBRARY =====
+const TEMPLATE_LIBRARY = [
+    {
+        id: 'welcome',
+        name: 'Welcome Email',
+        description: 'Clean welcome email for new subscribers',
+        mjml: `
 <mjml>
   <mj-head>
     <mj-attributes>
-      <mj-all font-family="Arial, sans-serif" />
-      <mj-text font-size="14px" color="#333333" line-height="1.6" />
+      <mj-all font-family="Inter, Arial, sans-serif" />
+      <mj-text font-size="16px" color="#334155" line-height="1.6" />
       <mj-button background-color="#6366f1" color="white" border-radius="8px" font-weight="600" />
     </mj-attributes>
-    <mj-style>
-      .header-title { font-size: 28px; font-weight: 700; color: #1a1a2e; }
-      .subtitle { color: #64748b; }
-    </mj-style>
   </mj-head>
-  <mj-body background-color="#f4f4f5">
-    <mj-section background-color="#ffffff" padding="40px 20px">
+  <mj-body background-color="#f8fafc">
+    <mj-section padding="40px 0">
       <mj-column>
-        <mj-text align="center" css-class="header-title">
-          Welcome to your newsletter!
-        </mj-text>
-        <mj-text align="center" css-class="subtitle">
-          Drag and drop blocks to start your design
-        </mj-text>
+        <mj-image src="https://via.placeholder.com/150x50?text=LOGO" width="150px" />
       </mj-column>
     </mj-section>
-    
-    <mj-section background-color="#ffffff" padding="20px">
+    <mj-section background-color="#ffffff" border-radius="16px 16px 0 0" padding="40px 20px">
       <mj-column>
-        <mj-text>
-          This is an example content. Click on any element to edit it, or drag new blocks from the left panel.
+        <mj-text align="center" font-size="32px" font-weight="800" color="#1e293b">
+          Welcome to the family!
         </mj-text>
-        <mj-button href="#">
-          Call to Action
+        <mj-text align="center" padding-top="10px">
+          We're so excited to have you here. You've just joined a community of amazing people.
+        </mj-text>
+        <mj-image src="https://via.placeholder.com/600x300?text=Welcome+Image" padding="20px 0" border-radius="12px" />
+        <mj-text>
+          At <strong>Your Brand</strong>, we believe in providing the best experience possible. Here's what you can expect from us:
+        </mj-text>
+        <mj-text>
+          • Weekly updates on new products<br/>
+          • Exclusive discounts and offers<br/>
+          • Actionable tips and tricks
+        </mj-text>
+        <mj-button href="#" padding-top="30px">
+          Get Started Now
         </mj-button>
       </mj-column>
     </mj-section>
-    
-    <mj-section background-color="#1a1a2e" padding="20px">
+    <mj-section background-color="#ffffff" border-radius="0 0 16px 16px" padding="20px">
       <mj-column>
-        <mj-text color="#ffffff" align="center" font-size="12px">
-          © 2024 Your Company. All rights reserved.
+        <mj-divider border-width="1px" border-color="#f1f5f9" />
+        <mj-text align="center" font-size="12px" color="#94a3b8">
+          Follow us on social media for more updates.
         </mj-text>
       </mj-column>
     </mj-section>
   </mj-body>
-</mjml>
-`;
+</mjml>`
+    },
+    {
+        id: 'promo',
+        name: 'Flash Sale',
+        description: 'High-conversion promotional email',
+        mjml: `
+<mjml>
+  <mj-head>
+    <mj-attributes>
+      <mj-all font-family="Inter, Arial, sans-serif" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#fee2e2">
+    <mj-section padding="20px">
+      <mj-column>
+        <mj-text align="center" font-size="14px" font-weight="bold" color="#dc2626" text-transform="uppercase" letter-spacing="2px">
+          Limited Time Offer
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" padding="40px 20px" border-radius="20px">
+      <mj-column>
+        <mj-text align="center" font-size="48px" font-weight="900" color="#111827">
+          50% OFF
+        </mj-text>
+        <mj-text align="center" font-size="20px" color="#4b5563" padding-bottom="30px">
+          Everything in our store!
+        </mj-text>
+        <mj-image src="https://via.placeholder.com/500x300?text=SALE" border-radius="10px" />
+        <mj-text align="center" padding-top="30px">
+          Don't miss out on the biggest sale of the season. Use code <strong>FLASH50</strong> at checkout.
+        </mj-text>
+        <mj-button background-color="#ef4444" color="white" font-size="18px" font-weight="bold" padding="30px" border-radius="50px" href="#">
+          SHOP THE SALE
+        </mj-button>
+        <mj-text align="center" font-size="12px" color="#9ca3af" padding-top="20px">
+          *Offer ends tonight at midnight.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>`
+    },
+    {
+        id: 'newsletter',
+        name: 'Modern Newsletter',
+        description: 'Elegant layout for sharing news and articles',
+        mjml: `
+<mjml>
+  <mj-head>
+    <mj-attributes>
+      <mj-all font-family="Inter, Arial, sans-serif" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f3f4f6">
+    <mj-section background-color="#1f2937" padding="20px">
+      <mj-column>
+        <mj-text color="#ffffff" font-size="20px" font-weight="bold">
+          The Weekly Post
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-image src="https://via.placeholder.com/600x350?text=Featured+Story" />
+        <mj-text font-size="24px" font-weight="bold" color="#111827">
+          Our Main Story Highlight
+        </mj-text>
+        <mj-text color="#4b5563">
+          Discover the latest trends and insights in your industry. This week we dive deep into the future of email design.
+        </mj-text>
+        <mj-button background-color="#3b82f6" align="left" href="#">
+          Read More
+        </mj-button>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="10px"></mj-section>
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column width="45%">
+        <mj-image src="https://via.placeholder.com/250x150" />
+        <mj-text font-size="18px" font-weight="bold">Story #2</mj-text>
+        <mj-text font-size="14px">Brief summary of the second interesting story.</mj-text>
+      </mj-column>
+      <mj-column width="10%"></mj-column>
+      <mj-column width="45%">
+        <mj-image src="https://via.placeholder.com/250x150" />
+        <mj-text font-size="18px" font-weight="bold">Story #3</mj-text>
+        <mj-text font-size="14px">Brief summary of the third interesting story.</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>`
+    }
+];
+
+// Initial template
+const initialTemplate = TEMPLATE_LIBRARY[0].mjml;
 
 // Load initial template
 editor.setComponents(initialTemplate);
+
+// ===== EMAIL SIZE CALCULATOR =====
+const sizeIndicator = document.getElementById('sizeIndicator');
+const sizeValue = document.getElementById('sizeValue');
+
+function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
+
+async function updateEmailSize() {
+    try {
+        const html = await getCompiledHtml();
+        let sizeBytes = new Blob([html]).size;
+        let isEstimated = false;
+
+        // If ImgBB is configured, calculate size WITHOUT base64 images
+        if (IMGBB_SERVICE && IMGBB_SERVICE.isConfigured()) {
+            // Remove base64 image data to estimate final size
+            const htmlWithoutBase64 = html.replace(/data:image\/[^;]+;base64,[^"]+/gi, 'https://i.ibb.co/placeholder.jpg');
+            sizeBytes = new Blob([htmlWithoutBase64]).size;
+            isEstimated = true;
+        }
+
+        // Update display
+        if (isEstimated) {
+            sizeValue.textContent = '~' + formatBytes(sizeBytes);
+            sizeIndicator.title = 'Estimated size after ImgBB upload';
+        } else {
+            sizeValue.textContent = formatBytes(sizeBytes);
+        }
+
+        // Remove all size classes
+        sizeIndicator.classList.remove('size-ok', 'size-warning', 'size-danger');
+
+        // Gmail clips emails > 102KB
+        if (sizeBytes < 50 * 1024) {
+            sizeIndicator.classList.add('size-ok');
+            if (!isEstimated) sizeIndicator.title = 'Email size is optimal';
+        } else if (sizeBytes < 102 * 1024) {
+            sizeIndicator.classList.add('size-warning');
+            if (!isEstimated) sizeIndicator.title = 'Warning: Approaching Gmail 102KB limit';
+        } else {
+            sizeIndicator.classList.add('size-danger');
+            if (!isEstimated) sizeIndicator.title = 'Danger: Gmail may clip this email (>102KB). Configure ImgBB to reduce size.';
+        }
+    } catch (e) {
+        sizeValue.textContent = '-- KB';
+    }
+}
+
+// Update size on editor changes (debounced)
+let sizeUpdateTimeout;
+editor.on('component:update', () => {
+    clearTimeout(sizeUpdateTimeout);
+    sizeUpdateTimeout = setTimeout(updateEmailSize, 500);
+});
+
+editor.on('component:add', () => {
+    clearTimeout(sizeUpdateTimeout);
+    sizeUpdateTimeout = setTimeout(updateEmailSize, 500);
+});
+
+editor.on('component:remove', () => {
+    clearTimeout(sizeUpdateTimeout);
+    sizeUpdateTimeout = setTimeout(updateEmailSize, 500);
+});
+
+// Initial size calculation
+setTimeout(updateEmailSize, 1000);
 
 // ===== IMPORT HTML =====
 const htmlFileInput = document.getElementById('htmlFileInput');
@@ -579,7 +753,30 @@ window.copyCode = copyCode;
 // ===== INSERT TO EMAIL =====
 document.getElementById('btnInsertEmail').addEventListener('click', async () => {
     try {
-        const html = await getCompiledHtml();
+        let html = await getCompiledHtml();
+
+        // Check if ImgBB is configured and there are base64 images
+        const hasBase64Images = html.includes('data:image/');
+
+        if (IMGBB_SERVICE.isConfigured() && hasBase64Images) {
+            showToast('Uploading images to cloud...', 'warning');
+
+            try {
+                const result = await IMGBB_SERVICE.processHtmlImages(html);
+                html = result.html;
+
+                if (result.uploadedCount > 0) {
+                    const savedKB = Math.round(result.savedBytes / 1024);
+                    showToast(`${result.uploadedCount} image(s) uploaded, saved ~${savedKB} KB`, 'success');
+                }
+
+                // Update size indicator
+                setTimeout(updateEmailSize, 100);
+            } catch (uploadError) {
+                console.error('Image upload failed:', uploadError);
+                showToast('Image upload failed, using embedded images', 'warning');
+            }
+        }
 
         const response = await browser.runtime.sendMessage({
             action: 'insertHtmlToCompose',
@@ -1166,6 +1363,92 @@ editor.on('rte:enable', () => {
         };
         rteToolbar.appendChild(aiBtn);
     }
+});
+
+// ===== TEMPLATE LIBRARY UI =====
+document.getElementById('btnLibrary').addEventListener('click', () => {
+    const content = `
+        <div class="template-grid">
+            ${TEMPLATE_LIBRARY.map(t => `
+                <div class="template-card" onclick="loadLibraryTemplate('${t.id}')">
+                    <h3>${t.name}</h3>
+                    <p>${t.description}</p>
+                    <div style="margin-top: 10px; font-size: 10px; color: var(--primary); font-weight: bold;">CLICK TO LOAD</div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    showModal('Template Library', content, [
+        { text: 'Cancel', primary: false, action: hideModal }
+    ]);
+});
+
+window.loadLibraryTemplate = (id) => {
+    const template = TEMPLATE_LIBRARY.find(t => t.id === id);
+    if (template) {
+        editor.setComponents(template.mjml);
+        hideModal();
+        showToast(`Template loaded: ${template.name}`);
+    }
+};
+
+// ===== IMGBB INTEGRATION =====
+if (window.IMGBB_SERVICE) {
+    IMGBB_SERVICE.init();
+}
+
+// ImgBB Config button
+document.getElementById('btnImgBBConfig').addEventListener('click', () => {
+    const isConfigured = IMGBB_SERVICE.isConfigured();
+
+    showModal('Image Hosting (ImgBB)', `
+        <div class="form-group">
+            <label>ImgBB API Key</label>
+            <input type="password" class="form-input" id="imgbbApiKeyInput" 
+                   placeholder="Your ImgBB API key..." 
+                   value="${IMGBB_SERVICE.getApiKey()}">
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+                Get your free API Key at <a href="https://api.imgbb.com/" target="_blank" style="color: var(--primary);">api.imgbb.com</a>
+            </p>
+        </div>
+        <div style="background: var(--surface); border-radius: 8px; padding: 12px; margin-top: 16px;">
+            <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">
+                <strong style="color: var(--success);">✓ Benefits:</strong> Images are uploaded to ImgBB servers, reducing email size from MB to KB. Perfect for Gmail compatibility.
+            </p>
+        </div>
+        <div style="margin-top: 16px; padding: 12px; background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 8px;">
+            <p style="font-size: 13px; margin: 0 0 8px 0; color: #f59e0b; font-weight: 600;">
+                ⚠️ Important: Enable remote images in Thunderbird
+            </p>
+            <p style="font-size: 12px; margin: 0; color: var(--text-secondary); line-height: 1.5;">
+                To see images while composing:<br>
+                <strong>Settings → Search "remote" → Enable "Allow remote content in messages"</strong>
+            </p>
+        </div>
+        <div style="margin-top: 16px; padding: 12px; background: ${isConfigured ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; border-radius: 8px;">
+            <p style="font-size: 13px; margin: 0; color: ${isConfigured ? 'var(--success)' : 'var(--danger)'};">
+                Status: ${isConfigured ? '✅ Configured - Images will be uploaded automatically' : '❌ Not configured - Images will be embedded as Base64'}
+            </p>
+        </div>
+    `, [
+        { text: 'Cancel', class: 'btn-secondary', action: hideModal },
+        {
+            text: 'Save', class: 'btn-primary', action: async () => {
+                const key = document.getElementById('imgbbApiKeyInput').value.trim();
+
+                if (key) {
+                    await IMGBB_SERVICE.setApiKey(key);
+                    showToast('ImgBB API Key saved', 'success');
+                    hideModal();
+                } else {
+                    // Clear the key if empty
+                    await IMGBB_SERVICE.setApiKey('');
+                    showToast('ImgBB disabled', 'warning');
+                    hideModal();
+                }
+            }
+        }
+    ]);
 });
 
 // ===== INITIALIZE =====

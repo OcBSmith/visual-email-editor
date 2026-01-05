@@ -154,6 +154,50 @@ body {
     height: 18px;
 }
 
+/* Size Indicator */
+.size-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--surface);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.size-indicator svg {
+    color: var(--text-muted);
+}
+
+.size-indicator.size-ok {
+    color: var(--success);
+}
+
+.size-indicator.size-ok svg {
+    color: var(--success);
+}
+
+.size-indicator.size-warning {
+    color: var(--warning);
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.size-indicator.size-warning svg {
+    color: var(--warning);
+}
+
+.size-indicator.size-danger {
+    color: var(--danger);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.size-indicator.size-danger svg {
+    color: var(--danger);
+}
+
 /* Toolbar Buttons */
 .toolbar-btn {
     width: 36px;

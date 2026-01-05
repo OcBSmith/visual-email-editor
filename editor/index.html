@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visual Email Editor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="lib/grapes.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -48,6 +50,17 @@
                     </svg>
                 </button>
             </div>
+
+            <!-- Email Size Indicator -->
+            <div id="sizeIndicator" class="size-indicator" title="Estimated email size">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" width="16" height="16">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                <span id="sizeValue">0 KB</span>
+            </div>
         </div>
 
         <div class="header-right">
@@ -88,10 +101,17 @@
                     <polyline points="7 3 7 8 15 8" />
                 </svg>
             </button>
-            <button id="btnLoadTemplate" class="toolbar-btn" title="Cargar plantilla">
+            <button id="btnLoadTemplate" class="toolbar-btn" title="Saved Templates">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                </svg>
+            </button>
+            <button id="btnLibrary" class="toolbar-btn" title="Template Library">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                 </svg>
             </button>
 
@@ -111,6 +131,13 @@
                     <polyline points="16 18 22 12 16 6" />
                     <polyline points="8 6 2 12 8 18" />
                 </svg>
+            </button>
+
+            <div class="separator"></div>
+
+            <!-- Image Hosting -->
+            <button id="btnImgBBConfig" class="toolbar-btn imgbb-btn" title="Image Hosting (ImgBB)">
+                📷
             </button>
 
             <div class="separator"></div>
@@ -191,6 +218,7 @@
     <script src="lib/grapes.min.js"></script>
     <script src="lib/grapesjs-mjml.min.js"></script>
     <script src="ai-service.js"></script>
+    <script src="imgbb-service.js"></script>
     <script src="editor.js"></script>
 </body>
 
