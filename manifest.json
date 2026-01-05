@@ -1,0 +1,41 @@
+{
+  "manifest_version": 2,
+  "name": "Visual Email Editor",
+  "version": "1.0.0",
+  "description": "Drag-and-drop visual editor to create responsive HTML emails with integrated AI",
+  "author": "Antonio RC",
+  "homepage_url": "https://github.com/AntoniRC/visual-email-editor",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "visual-email-editor@thunderbird-addons",
+      "strict_min_version": "115.0"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.svg",
+    "32": "icons/icon-32.svg",
+    "48": "icons/icon-48.svg",
+    "96": "icons/icon-96.svg",
+    "128": "icons/icon-128.svg"
+  },
+  "permissions": [
+    "compose",
+    "tabs",
+    "storage"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "browser_action": {
+    "default_title": "Abrir Visual Email Editor",
+    "default_icon": {
+      "16": "icons/icon-16.svg",
+      "32": "icons/icon-32.svg"
+    }
+  },
+  "web_accessible_resources": [
+    "editor/*"
+  ]
+}
