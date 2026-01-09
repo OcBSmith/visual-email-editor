@@ -58,7 +58,14 @@ const editor = grapesjs.init({
                     { type: 'integer', name: 'height', property: 'height', units: ['px', '%', 'auto'] },
                     { type: 'integer', name: 'max-width', property: 'max-width', units: ['px', '%'] },
                     { type: 'integer', name: 'padding', property: 'padding', units: ['px', '%'] },
-                    { type: 'integer', name: 'margin', property: 'margin', units: ['px', '%'] }
+                    {
+                        type: 'select', name: 'Horizontal Align', property: 'margin',
+                        options: [
+                            { value: '0', name: 'Left' },
+                            { value: '0 auto', name: 'Center' },
+                            { value: '0 0 0 auto', name: 'Right' }
+                        ]
+                    }
                 ]
             },
             {
@@ -138,6 +145,7 @@ const editor = grapesjs.init({
     },
 
     // Device manager for responsive preview
+    // Desktop uses full width canvas, MJML content (600px) is centered like in Thunderbird
     deviceManager: {
         devices: [
             { name: 'Desktop', width: '' },
@@ -159,49 +167,75 @@ const TEMPLATE_LIBRARY = [
     {
         id: 'welcome',
         name: 'Welcome Email',
-        description: 'Clean welcome email for new subscribers',
+        description: 'Clean light welcome email',
         mjml: `
 <mjml>
   <mj-head>
     <mj-attributes>
-      <mj-all font-family="Inter, Arial, sans-serif" />
-      <mj-text font-size="16px" color="#334155" line-height="1.6" />
-      <mj-button background-color="#6366f1" color="white" border-radius="8px" font-weight="600" />
+      <mj-all font-family="'Segoe UI', Inter, Arial, sans-serif" />
+      <mj-text font-size="16px" color="#333333" line-height="1.7" />
+      <mj-button background-color="#0a84ff" color="#ffffff" border-radius="8px" font-weight="600" />
     </mj-attributes>
   </mj-head>
-  <mj-body background-color="#f8fafc">
-    <mj-section padding="40px 0">
+  <mj-body background-color="#f5f5f5">
+    <mj-section padding="30px 0 10px 0">
       <mj-column>
-        <mj-image src="https://via.placeholder.com/150x50?text=LOGO" width="150px" />
+        <mj-image src="https://www.thunderbird.net/media/img/thunderbird/logos/release.png" width="80px" alt="Thunderbird" />
       </mj-column>
     </mj-section>
-    <mj-section background-color="#ffffff" border-radius="16px 16px 0 0" padding="40px 20px">
+    <mj-section background-color="#ffffff" border-radius="16px" padding="40px 20px">
       <mj-column>
-        <mj-text align="center" font-size="32px" font-weight="800" color="#1e293b">
-          Welcome to the family!
+        <mj-text align="center" font-size="38px" font-weight="300" color="#1a1a1a" padding-bottom="0">
+          Welcome to <span style="color: #0a84ff; font-style: italic;">Freedom</span>
         </mj-text>
-        <mj-text align="center" padding-top="10px">
-          We're so excited to have you here. You've just joined a community of amazing people.
+        <mj-text align="center" font-size="18px" color="#666666" padding="20px 40px">
+          Tu mensaje ha sido creado con el editor visual de Thunderbird. Disfruta de la productividad, privacidad y libertad que te ofrecemos.
         </mj-text>
-        <mj-image src="https://via.placeholder.com/600x300?text=Welcome+Image" padding="20px 0" border-radius="12px" />
-        <mj-text>
-          At <strong>Your Brand</strong>, we believe in providing the best experience possible. Here's what you can expect from us:
-        </mj-text>
-        <mj-text>
-          • Weekly updates on new products<br/>
-          • Exclusive discounts and offers<br/>
-          • Actionable tips and tricks
-        </mj-text>
-        <mj-button href="#" padding-top="30px">
-          Get Started Now
-        </mj-button>
       </mj-column>
     </mj-section>
-    <mj-section background-color="#ffffff" border-radius="0 0 16px 16px" padding="20px">
+    <mj-section padding="20px">
+      <mj-group>
+        <mj-column>
+          <mj-button href="#" font-size="14px" padding="12px 20px">
+            🎯 Empezar
+          </mj-button>
+        </mj-column>
+        <mj-column>
+          <mj-button href="#" font-size="14px" padding="12px 20px" background-color="#ff4081">
+            ❤️ Donar
+          </mj-button>
+        </mj-column>
+        <mj-column>
+          <mj-button href="#" font-size="14px" padding="12px 20px" background-color="#00c853">
+            💬 Ayuda
+          </mj-button>
+        </mj-column>
+      </mj-group>
+    </mj-section>
+    <mj-section background-color="#ffffff" border-radius="16px" padding="40px 30px">
+      <mj-group>
+        <mj-column>
+          <mj-text font-size="20px" font-weight="700" color="#1a1a1a" padding-bottom="10px">
+            Libre y Open Source
+          </mj-text>
+          <mj-text color="#666666">
+            Thunderbird es tuyo para siempre. Desarrollado abiertamente y distribuido libremente.
+          </mj-text>
+        </mj-column>
+        <mj-column>
+          <mj-text font-size="20px" font-weight="700" color="#1a1a1a" padding-bottom="10px">
+            Impulsado por la Comunidad
+          </mj-text>
+          <mj-text color="#666666">
+            Puedes ser parte de nuestra historia. Cualquiera puede contribuir a Thunderbird.
+          </mj-text>
+        </mj-column>
+      </mj-group>
+    </mj-section>
+    <mj-section padding="30px 0">
       <mj-column>
-        <mj-divider border-width="1px" border-color="#f1f5f9" />
-        <mj-text align="center" font-size="12px" color="#94a3b8">
-          Follow us on social media for more updates.
+        <mj-text align="center" font-size="12px" color="#999999">
+          © 2024 Visual Email Editor for Thunderbird
         </mj-text>
       </mj-column>
     </mj-section>
@@ -321,24 +355,10 @@ function formatBytes(bytes) {
 async function updateEmailSize() {
     try {
         const html = await getCompiledHtml();
-        let sizeBytes = new Blob([html]).size;
-        let isEstimated = false;
-
-        // If ImgBB is configured, calculate size WITHOUT base64 images
-        if (IMGBB_SERVICE && IMGBB_SERVICE.isConfigured()) {
-            // Remove base64 image data to estimate final size
-            const htmlWithoutBase64 = html.replace(/data:image\/[^;]+;base64,[^"]+/gi, 'https://i.ibb.co/placeholder.jpg');
-            sizeBytes = new Blob([htmlWithoutBase64]).size;
-            isEstimated = true;
-        }
+        const sizeBytes = new Blob([html]).size;
 
         // Update display
-        if (isEstimated) {
-            sizeValue.textContent = '~' + formatBytes(sizeBytes);
-            sizeIndicator.title = 'Estimated size after ImgBB upload';
-        } else {
-            sizeValue.textContent = formatBytes(sizeBytes);
-        }
+        sizeValue.textContent = formatBytes(sizeBytes);
 
         // Remove all size classes
         sizeIndicator.classList.remove('size-ok', 'size-warning', 'size-danger');
@@ -346,13 +366,13 @@ async function updateEmailSize() {
         // Gmail clips emails > 102KB
         if (sizeBytes < 50 * 1024) {
             sizeIndicator.classList.add('size-ok');
-            if (!isEstimated) sizeIndicator.title = 'Email size is optimal';
+            sizeIndicator.title = 'Email size is optimal';
         } else if (sizeBytes < 102 * 1024) {
             sizeIndicator.classList.add('size-warning');
-            if (!isEstimated) sizeIndicator.title = 'Warning: Approaching Gmail 102KB limit';
+            sizeIndicator.title = 'Warning: Approaching Gmail 102KB limit';
         } else {
             sizeIndicator.classList.add('size-danger');
-            if (!isEstimated) sizeIndicator.title = 'Danger: Gmail may clip this email (>102KB). Configure ImgBB to reduce size.';
+            sizeIndicator.title = 'Danger: Gmail may clip this email (>102KB)';
         }
     } catch (e) {
         sizeValue.textContent = '-- KB';
@@ -753,30 +773,7 @@ window.copyCode = copyCode;
 // ===== INSERT TO EMAIL =====
 document.getElementById('btnInsertEmail').addEventListener('click', async () => {
     try {
-        let html = await getCompiledHtml();
-
-        // Check if ImgBB is configured and there are base64 images
-        const hasBase64Images = html.includes('data:image/');
-
-        if (IMGBB_SERVICE.isConfigured() && hasBase64Images) {
-            showToast('Uploading images to cloud...', 'warning');
-
-            try {
-                const result = await IMGBB_SERVICE.processHtmlImages(html);
-                html = result.html;
-
-                if (result.uploadedCount > 0) {
-                    const savedKB = Math.round(result.savedBytes / 1024);
-                    showToast(`${result.uploadedCount} image(s) uploaded, saved ~${savedKB} KB`, 'success');
-                }
-
-                // Update size indicator
-                setTimeout(updateEmailSize, 100);
-            } catch (uploadError) {
-                console.error('Image upload failed:', uploadError);
-                showToast('Image upload failed, using embedded images', 'warning');
-            }
-        }
+        const html = await getCompiledHtml();
 
         const response = await browser.runtime.sendMessage({
             action: 'insertHtmlToCompose',
@@ -822,6 +819,9 @@ async function getCompiledHtml() {
 
             // Clean up extra whitespace
             cleanHtml = cleanHtml.replace(/\n\s*\n\s*\n/g, '\n\n');
+
+            // Keep MJML's 600px width for WYSIWYG consistency with Thunderbird
+            // Thunderbird ignores CSS width properties, so we keep pixel widths
 
             console.log('Cleaned HTML length:', cleanHtml.length);
             return cleanHtml;
@@ -1049,12 +1049,72 @@ document.addEventListener('keydown', (e) => {
 // ===== EDITOR EVENTS =====
 editor.on('load', () => {
     console.log('Visual Email Editor loaded');
+
+    // Add Horizontal Align sector to StyleManager
+    const sm = editor.StyleManager;
+    sm.addSector('alignment', {
+        name: 'Alignment',
+        open: true,
+        properties: [
+            {
+                type: 'select',
+                property: 'margin',
+                name: 'Horizontal Align',
+                defaults: '0',
+                options: [
+                    { value: '0', name: 'Left' },
+                    { value: '0 auto', name: 'Center' },
+                    { value: '0 0 0 auto', name: 'Right' }
+                ]
+            },
+            {
+                type: 'select',
+                property: 'text-align',
+                name: 'Text Align',
+                defaults: 'left',
+                options: [
+                    { value: 'left', name: 'Left' },
+                    { value: 'center', name: 'Center' },
+                    { value: 'right', name: 'Right' }
+                ]
+            }
+        ]
+    }, { at: 0 }); // Add at the top
 });
 
 editor.on('component:selected', () => {
     // Auto switch to styles panel when component is selected
     const stylesTab = document.querySelector('[data-panel="styles"]');
     if (stylesTab) stylesTab.click();
+});
+
+// Limit width to 600px max for MJML components
+const MAX_WIDTH = 600;
+editor.on('component:update', (component) => {
+    if (!component) return;
+
+    const type = component.get('type') || '';
+    if (type.startsWith('mj-') || type === 'image') {
+        // Check style width
+        const style = component.getStyle();
+        if (style.width) {
+            const widthValue = parseInt(style.width);
+            if (widthValue > MAX_WIDTH) {
+                component.addStyle({ width: MAX_WIDTH + 'px' });
+                console.log(`Width limited to ${MAX_WIDTH}px for ${type}`);
+            }
+        }
+
+        // Check attribute width
+        const attrs = component.getAttributes();
+        if (attrs.width) {
+            const widthValue = parseInt(attrs.width);
+            if (widthValue > MAX_WIDTH) {
+                component.addAttributes({ width: MAX_WIDTH + 'px' });
+                console.log(`Attribute width limited to ${MAX_WIDTH}px for ${type}`);
+            }
+        }
+    }
 });
 
 // ===== AI INTEGRATION =====
@@ -1391,65 +1451,6 @@ window.loadLibraryTemplate = (id) => {
         showToast(`Template loaded: ${template.name}`);
     }
 };
-
-// ===== IMGBB INTEGRATION =====
-if (window.IMGBB_SERVICE) {
-    IMGBB_SERVICE.init();
-}
-
-// ImgBB Config button
-document.getElementById('btnImgBBConfig').addEventListener('click', () => {
-    const isConfigured = IMGBB_SERVICE.isConfigured();
-
-    showModal('Image Hosting (ImgBB)', `
-        <div class="form-group">
-            <label>ImgBB API Key</label>
-            <input type="password" class="form-input" id="imgbbApiKeyInput" 
-                   placeholder="Your ImgBB API key..." 
-                   value="${IMGBB_SERVICE.getApiKey()}">
-            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
-                Get your free API Key at <a href="https://api.imgbb.com/" target="_blank" style="color: var(--primary);">api.imgbb.com</a>
-            </p>
-        </div>
-        <div style="background: var(--surface); border-radius: 8px; padding: 12px; margin-top: 16px;">
-            <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">
-                <strong style="color: var(--success);">✓ Benefits:</strong> Images are uploaded to ImgBB servers, reducing email size from MB to KB. Perfect for Gmail compatibility.
-            </p>
-        </div>
-        <div style="margin-top: 16px; padding: 12px; background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 8px;">
-            <p style="font-size: 13px; margin: 0 0 8px 0; color: #f59e0b; font-weight: 600;">
-                ⚠️ Important: Enable remote images in Thunderbird
-            </p>
-            <p style="font-size: 12px; margin: 0; color: var(--text-secondary); line-height: 1.5;">
-                To see images while composing:<br>
-                <strong>Settings → Search "remote" → Enable "Allow remote content in messages"</strong>
-            </p>
-        </div>
-        <div style="margin-top: 16px; padding: 12px; background: ${isConfigured ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; border-radius: 8px;">
-            <p style="font-size: 13px; margin: 0; color: ${isConfigured ? 'var(--success)' : 'var(--danger)'};">
-                Status: ${isConfigured ? '✅ Configured - Images will be uploaded automatically' : '❌ Not configured - Images will be embedded as Base64'}
-            </p>
-        </div>
-    `, [
-        { text: 'Cancel', class: 'btn-secondary', action: hideModal },
-        {
-            text: 'Save', class: 'btn-primary', action: async () => {
-                const key = document.getElementById('imgbbApiKeyInput').value.trim();
-
-                if (key) {
-                    await IMGBB_SERVICE.setApiKey(key);
-                    showToast('ImgBB API Key saved', 'success');
-                    hideModal();
-                } else {
-                    // Clear the key if empty
-                    await IMGBB_SERVICE.setApiKey('');
-                    showToast('ImgBB disabled', 'warning');
-                    hideModal();
-                }
-            }
-        }
-    ]);
-});
 
 // ===== INITIALIZE =====
 console.log('Visual Email Editor initialized');

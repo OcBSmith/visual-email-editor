@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-01-10
+
+### ✨ Added
+
+- **Max Width Limit (600px)**
+  - All MJML components now have a maximum width of 600px
+  - Prevents layout issues in email clients
+  - Automatic correction when exceeding limit
+
+- **New Welcome Template**
+  - Clean light mode design
+  - Professional look with white sections and gray background
+  - Colorful buttons (blue, pink, green)
+
+- **Improved Email Compatibility**
+  - Added `mj-group` for multi-column sections
+  - Columns now stay horizontal in Gmail and all clients
+  - WYSIWYG: Editor shows exactly what Thunderbird renders
+
+### 🗑️ Removed
+
+- **ImgBB Integration**
+  - Removed external image hosting via ImgBB
+  - Images are now embedded directly as base64
+  - Simpler workflow, no API key needed for images
+  - Better privacy (images not uploaded to third parties)
+
+### 🔧 Fixed
+
+- Image sizing now consistent between editor and Thunderbird
+- Email width now matches standard 600px
+- Multi-column layouts work correctly in Gmail
+
+---
+
 ## [1.0.0] - 2026-01-05
 
 ### ✨ Added

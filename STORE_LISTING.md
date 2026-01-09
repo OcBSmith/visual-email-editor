@@ -16,13 +16,16 @@ Drag-and-drop visual editor to create responsive HTML emails with AI
 Design emails by dragging and dropping components: images, text, buttons, columns, and more. No HTML coding required.
 
 **📱 100% Responsive Emails**  
-Based on MJML, the industry standard. Your emails will look perfect on any device and email client.
+Based on MJML, the industry standard. Your emails will look perfect on any device and email client including Gmail, Outlook, and Apple Mail.
+
+**📏 WYSIWYG Design**
+What you see in the editor is exactly what appears in Thunderbird. No surprises!
 
 **🤖 Integrated Artificial Intelligence**
 Generate complete emails describing what you want. Use free AI models like Llama 3.3, Mixtral, and Gemma via Groq.
 
 **⚡ Perfect Integration**
-One click to insert your design into Thunderbird. Automatically preserves your configured signature.
+One click to insert your design into Thunderbird. Automatically preserves your configured signature. Images are embedded directly - no external hosting needed.
 
 ### 🎯 Ideal for
 - Newsletters and bulletins
@@ -34,6 +37,7 @@ One click to insert your design into Thunderbird. Automatically preserves your c
 - Your API Key is stored locally
 - We do not send data to our own servers
 - AI requests go directly to Groq
+- Images are embedded in emails (not uploaded to third parties)
 
 ### 📋 Requirements
 - Thunderbird 115 or higher

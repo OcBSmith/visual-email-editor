@@ -54,7 +54,7 @@ function generateContentId() {
  * with proper Content-ID references
  */
 async function processInlineImages(html, tabId) {
-  // Match img tags with base64 src
+  // Match img tags with base64 src, capturing the full tag
   const imgRegex = /<img([^>]*)src="(data:image\/([^;]+);base64,([^"]+))"([^>]*)>/gi;
   let processedHtml = html;
   let imageCount = 0;
@@ -92,10 +92,12 @@ async function processInlineImages(html, tabId) {
         contentId: contentId  // This makes it an inline attachment
       });
 
-      // Replace the data URI with cid: reference
+      // Replace the data URI with cid: reference AND add width=100% to fill container
+      // This ensures the image fills its cell/column in Thunderbird
+      const cidSrc = `cid:${contentId}`;
       processedHtml = processedHtml.replace(
-        img.dataUri,
-        `cid:${contentId}`
+        img.fullMatch,
+        `<img${img.beforeSrc}src="${cidSrc}"${img.afterSrc} style="width: 100%; max-width: 100%; display: block;">`
       );
 
       console.log(`Image ${imageCount} attached with CID: ${contentId}`);
@@ -108,6 +110,8 @@ async function processInlineImages(html, tabId) {
 
   return { html: processedHtml, count: imageCount };
 }
+
+
 
 // Insert HTML while preserving the signature and handling inline images
 async function insertHtmlToCompose(html) {
@@ -127,9 +131,10 @@ async function insertHtmlToCompose(html) {
     const details = await browser.compose.getComposeDetails(tab.id);
     console.log("Got compose details, body length:", details.body?.length || 0);
 
-    // Step 4: Process inline images BEFORE setting body
-    const { html: processedHtml, count: attachmentCount } = await processInlineImages(html, tab.id);
-    console.log(`Processed ${attachmentCount} inline images`);
+    // Step 4: Use HTML as-is (keep base64 images for consistent display)
+    // CID conversion was causing size inconsistencies between editor and Thunderbird
+    const processedHtml = html;
+    console.log("Using HTML directly without CID conversion");
 
     // Step 5: Combine our HTML with the existing signature
     let finalBody = processedHtml;
@@ -169,8 +174,7 @@ async function insertHtmlToCompose(html) {
 
     return {
       success: true,
-      newCompose: true,
-      inlineImages: attachmentCount
+      newCompose: true
     };
 
   } catch (error) {

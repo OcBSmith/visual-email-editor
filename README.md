@@ -42,6 +42,9 @@ Design professional emails by dragging and dropping components. No HTML coding r
 ### 📱 100% Responsive Emails
 Built on [MJML](https://mjml.io/), the industry standard. Your emails will look perfect on any device and email client.
 
+### 📏 WYSIWYG Design
+What you see is what you get! The editor preview matches exactly how your email will appear in Thunderbird and Gmail.
+
 ### 🤖 Integrated Artificial Intelligence
 Generate complete emails just by describing what you want. Uses free AI models through [Groq](https://groq.com/):
 - **Llama 3.3 70B** (recommended)
@@ -52,6 +55,7 @@ Generate complete emails just by describing what you want. Uses free AI models t
 ### ⚡ Seamless Thunderbird Integration
 - One click to insert your design into a new email
 - Automatically preserves your configured signature
+- Images embedded directly (no external hosting needed)
 - Works with Thunderbird 115+
 
 ### 💾 Template System
