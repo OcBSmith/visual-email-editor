@@ -798,6 +798,14 @@ body {
     gap: 12px;
 }
 
+/* ===== TEMPLATE MANAGER ===== */
+.template-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    padding: 8px 4px;
+}
+
 .template-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -805,6 +813,10 @@ body {
     padding: 16px;
     cursor: pointer;
     transition: all var(--transition-fast);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100px;
 }
 
 .template-card:hover {
@@ -819,8 +831,41 @@ body {
 }
 
 .template-card p {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-muted);
+    margin-top: auto;
+}
+
+.template-delete-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: #ef4444;
+    /* Bright red */
+    color: white;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    /* Higher default opacity */
+    /* More visible initially */
+    transition: all var(--transition-fast);
+    z-index: 10;
+    /* Ensure it is on top */
+    pointer-events: auto;
+}
+
+.template-card:hover .template-delete-btn {
+    opacity: 1;
+}
+
+.template-delete-btn:hover {
+    background: var(--danger);
+    color: white;
 }
 
 /* ===== FORM ELEMENTS ===== */

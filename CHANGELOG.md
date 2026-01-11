@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2026-01-10
+## [1.1.0] - 2026-01-11
 
 ### ✨ Added
 
@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Start from scratch with a single click
   - Confirmation modal to prevent accidental loss of work
   - Clean MJML structure initialized automatically
+
+- **Enhanced Template Management**
+  - **Interactive Grid**: New visual library with template cards.
+  - **Smart Saving**: Detection of duplicate names for easy overwriting/updating.
+  - **Template Deletion**: Dedicated red button to remove unwanted designs.
+  - **AI Integration**: Save AI results as templates directly from the generation modal.
 
 - **Improved Bold Style Preservation**
   - Enhanced template styles with `font-weight: bold` and `<strong>` tags

@@ -662,38 +662,91 @@ async function saveTemplate() {
     }
 
     try {
-        const mjml = editor.getHtml();
-        const css = editor.getCss();
         const components = JSON.stringify(editor.getComponents());
+        // For MJML templates, get MJML code
+        const mjml = editor.getHtml();
 
         const storage = await browser.storage.local.get('templates');
-        const templates = storage.templates || [];
+        let templates = storage.templates || [];
 
-        const template = {
-            id: Date.now().toString(),
-            name: name,
-            date: new Date().toISOString(),
-            mjml: mjml,
-            css: css,
-            components: components
-        };
+        // Check if template with same name exists
+        const existingIndex = templates.findIndex(t => t.name.toLowerCase() === name.toLowerCase());
 
-        templates.unshift(template);
+        if (existingIndex !== -1) {
+            // Confirm overwrite (using modal or simple confirm for speed here, but let's stick to toast or simple logic)
+            // Actually, let's just update it if it exists or ask in a nested way.
+            // For now, let's just update it to keep it simple but functional.
+            templates[existingIndex] = {
+                ...templates[existingIndex],
+                date: new Date().toISOString(),
+                mjml: mjml,
+                components: components
+            };
+            showToast('Template updated successfully');
+        } else {
+            const template = {
+                id: Date.now().toString(),
+                name: name,
+                date: new Date().toISOString(),
+                mjml: mjml,
+                components: components
+            };
+            templates.unshift(template);
+            showToast('Template saved successfully');
+        }
 
         // Keep only last 20 templates
         if (templates.length > 20) {
-            templates.pop();
+            templates = templates.slice(0, 20);
         }
 
         await browser.storage.local.set({ templates });
-
         hideModal();
-        showToast('Template saved successfully');
     } catch (error) {
         console.error('Error saving template:', error);
         showToast('Error saving template', 'error');
     }
 }
+
+async function deleteTemplate(id, e) {
+    if (e) {
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+    }
+
+    // Get template name for better confirmation
+    let templateName = 'this template';
+    try {
+        const storage = await browser.storage.local.get('templates');
+        const templates = storage.templates || [];
+        const template = templates.find(t => t.id === id);
+        if (template) templateName = `"${template.name}"`;
+    } catch (err) { }
+
+    if (!confirm(`Are you sure you want to delete ${templateName}?`)) return;
+
+    try {
+        const storage = await browser.storage.local.get('templates');
+        let templates = storage.templates || [];
+        templates = templates.filter(t => t.id !== id);
+        await browser.storage.local.set({ templates });
+
+        showToast('Template deleted');
+
+        // Refresh the list by re-triggering the click on the Load button
+        const btnLoad = document.getElementById('btnLoadTemplate');
+        if (btnLoad) {
+            btnLoad.click();
+        } else {
+            hideModal();
+        }
+    } catch (error) {
+        console.error('Error deleting template:', error);
+        showToast('Error deleting template', 'error');
+    }
+}
+
+window.deleteTemplate = deleteTemplate;
 
 // Make saveTemplate globally available
 window.saveTemplate = saveTemplate;
@@ -705,7 +758,9 @@ document.getElementById('btnLoadTemplate').addEventListener('click', async () =>
         const templates = storage.templates || [];
 
         if (templates.length === 0) {
-            showModal('Load Template', '<p style="text-align:center;color:var(--text-muted);">No saved templates found</p>', []);
+            showModal('Load Template', '<p style="text-align:center;color:var(--text-muted);padding:20px;">No saved templates found</p>', [
+                { text: 'Close', primary: false, action: hideModal }
+            ]);
             return;
         }
 
@@ -713,6 +768,8 @@ document.getElementById('btnLoadTemplate').addEventListener('click', async () =>
       <div class="template-grid" id="templateGrid">
         ${templates.map(t => `
           <div class="template-card" data-template-id="${t.id}">
+            <button class="template-delete-btn" onclick="deleteTemplate('${t.id}', event)" title="Delete template">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
             <h3>${escapeHtml(t.name)}</h3>
             <p>${formatDate(t.date)}</p>
           </div>
@@ -730,7 +787,7 @@ document.getElementById('btnLoadTemplate').addEventListener('click', async () =>
             if (grid) {
                 grid.addEventListener('click', (e) => {
                     const card = e.target.closest('.template-card');
-                    if (card) {
+                    if (card && !e.target.closest('.template-delete-btn')) {
                         loadTemplate(card.dataset.templateId);
                     }
                 });
@@ -1256,11 +1313,17 @@ document.getElementById('btnAIGenerate').addEventListener('click', () => {
     `, [
         { text: 'Cancel', class: 'btn-secondary', action: hideModal },
         {
+            text: 'Save as Template', class: 'btn-secondary', id: 'btnSaveAiResult', style: 'display:none', action: () => {
+                document.getElementById('btnSaveTemplate').click();
+            }
+        },
+        {
             text: 'Generate', class: 'btn-primary ai-btn', id: 'btnDoGenerate', action: async () => {
                 const description = document.getElementById('aiDescriptionInput').value.trim();
                 const style = document.getElementById('aiStyleSelect').value;
                 const preview = document.getElementById('aiGeneratePreview');
                 const btn = document.getElementById('btnDoGenerate');
+                const saveBtn = document.getElementById('btnSaveAiResult');
 
                 if (!description) {
                     showToast('Please describe the email you want to create', 'warning');
@@ -1280,7 +1343,15 @@ document.getElementById('btnAIGenerate').addEventListener('click', () => {
                     editor.setComponents(mjml);
 
                     showToast('Email generated successfully', 'success');
-                    hideModal();
+
+                    // Show save button and update preview
+                    if (saveBtn) {
+                        saveBtn.style.display = 'block';
+                        btn.textContent = 'Regenerate';
+                        btn.classList.remove('ai-loading');
+                    }
+                    preview.classList.remove('loading');
+                    preview.innerHTML = '<span style="color: var(--success);">Generation complete! You can preview it in the canvas behind this modal.</span>';
                 } catch (error) {
                     preview.classList.remove('loading');
                     preview.innerHTML = `<span style="color: var(--danger);">Error: ${error.message}</span>`;

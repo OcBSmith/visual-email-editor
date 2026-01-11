@@ -41,27 +41,16 @@ Design professional emails by dragging and dropping components. No HTML coding r
 
 ### 📱 100% Responsive Emails
 Built on [MJML](https://mjml.io/), the industry standard. Your emails will look perfect on any device and email client.
-
-### 📏 WYSIWYG Design
-What you see in the editor is exactly what appears in Thunderbird. Standard **640px** width for professional results. No surprises!
-
-### 🤖 Integrated Artificial Intelligence
-Generate complete emails just by describing what you want. Uses free AI models through [Groq](https://groq.com/):
-- **Llama 3.3 70B** (recommended)
-- **Llama 3.1 8B Instant**
-- **Mixtral 8x7B**
-- **Gemma 2 9B**
-
-### ⚡ Seamless Thunderbird Integration
-- One click to insert your design into a new email
-- Automatically preserves your configured signature
-- Images embedded directly (no external hosting needed)
-- Works with Thunderbird 115+
-
-### 💾 Template System
-- Save your designs as reusable templates
-- Load saved templates instantly
-- Import existing HTML or MJML files
+- **🎨 WYSIWYG Template Editor:** Drag-and-drop MJML components to build professional emails easily.
+- **🤖 AI Generation (Groq):** Generate complete designs from text descriptions and edit content with AI assistance.
+- **💾 Advanced Template System:** 
+  - Save and load your designs locally.
+  - Automatic overwrite support for existing template names.
+  - Interactive library grid with **deletion functionality**.
+  - Save AI results directly to your template library.
+- **📐 Thunderbird Native Standard:** Emails are optimized at **640px width** for perfect rendering and signature alignment.
+- **🖼️ Deep Privacy:** Images are embedded directly (base64) or as absolute URLs. No external tracking or hidden dependencies.
+- **⚡ Fast Integration:** Insert your design into a Thunderbird compose window with a single click.
 
 ### ✏️ AI-Powered Text Editing
 - **Improve**: Optimize copywriting
