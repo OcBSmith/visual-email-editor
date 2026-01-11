@@ -251,6 +251,44 @@ body {
     box-shadow: var(--shadow-glow);
 }
 
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-secondary {
+    padding: 10px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-secondary:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+}
+
+.btn-danger {
+    padding: 10px 20px;
+    background: var(--danger);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-danger:hover {
+    opacity: 0.9;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+}
+
 .btn-primary:hover {
     transform: translateY(-1px);
     box-shadow: 0 0 30px var(--primary-glow);
@@ -629,7 +667,7 @@ body {
     border: 1px solid var(--border);
     border-radius: 16px;
     width: 90%;
-    max-width: 600px;
+    max-width: 640px;
     max-height: 80vh;
     display: flex;
     flex-direction: column;

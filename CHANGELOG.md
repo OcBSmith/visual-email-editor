@@ -9,34 +9,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### ✨ Added
 
-- **Max Width Limit (600px)**
-  - All MJML components now have a maximum width of 600px
-  - Prevents layout issues in email clients
-  - Automatic correction when exceeding limit
+- **Increased Max Width (640px)**
+  - Global width increased from 600px to 640px for a more spacious design
+  - All MJML components and export containers adjusted to 640px
+  - Perfect alignment with updated user signatures
+
+- **New Design Button**
+  - Start from scratch with a single click
+  - Confirmation modal to prevent accidental loss of work
+  - Clean MJML structure initialized automatically
+
+- **Improved Bold Style Preservation**
+  - Enhanced template styles with `font-weight: bold` and `<strong>` tags
+  - Better visibility in Thunderbird's compose window
+
+- **Optimized HTML Extraction**
+  - Only `<body>` content and `<style>` tags are extracted
+  - Prevents nested `<html>` tags when inserting into Thunderbird
+  - Clean, standard-compliant markup
 
 - **New Welcome Template**
   - Clean light mode design
   - Professional look with white sections and gray background
   - Colorful buttons (blue, pink, green)
 
-- **Improved Email Compatibility**
-  - Added `mj-group` for multi-column sections
-  - Columns now stay horizontal in Gmail and all clients
-  - WYSIWYG: Editor shows exactly what Thunderbird renders
-
 ### 🗑️ Removed
 
 - **ImgBB Integration**
   - Removed external image hosting via ImgBB
   - Images are now embedded directly as base64
-  - Simpler workflow, no API key needed for images
-  - Better privacy (images not uploaded to third parties)
+  - Better privacy and simpler workflow
 
 ### 🔧 Fixed
 
-- Image sizing now consistent between editor and Thunderbird
-- Email width now matches standard 600px
-- Multi-column layouts work correctly in Gmail
+- Email width now strictly enforced at 640px
+- Bold styles correctly maintained in Thunderbird
+- Double `<html>` tag issue resolved
+- Multi-column layouts horizontal and stable in all clients
 
 ---
 

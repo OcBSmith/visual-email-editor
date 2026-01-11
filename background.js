@@ -141,27 +141,43 @@ async function insertHtmlToCompose(html) {
 
     if (details.body) {
       const existingBody = details.body;
+      console.log("Existing body preview:", existingBody.substring(0, 500));
+
+      // Patterns to detect signatures in Thunderbird
       const signaturePatterns = [
         /<div[^>]*class="[^"]*signature[^"]*"[^>]*>/i,
         /<div[^>]*id="[^"]*signature[^"]*"[^>]*>/i,
         /--\s*<br/i,
-        /<pre[^>]*class="moz-signature"/i
+        /<pre[^>]*class="moz-signature"/i,
+        /class="moz-signature"/i,
+        /<div[^>]*moz-signature/i,
+        /moz-signature/i,
+        /<table[^>]*class="[^"]*signature/i
       ];
 
       let hasSignature = signaturePatterns.some(pattern => pattern.test(existingBody));
 
+      // Also check if there's any meaningful content (external signature file loaded)
       if (!hasSignature) {
+        // Remove HTML tags and check for text content
         const strippedContent = existingBody.replace(/<[^>]*>/g, '').trim();
-        hasSignature = strippedContent.length > 0;
+        // If there's text content, assume it's a signature
+        hasSignature = strippedContent.length > 10;
+        console.log("Stripped content length:", strippedContent.length);
       }
 
       if (hasSignature) {
         console.log("Signature detected, preserving it");
+        // Insert our HTML before the signature
         if (existingBody.includes('<body')) {
-          finalBody = existingBody.replace(/(<body[^>]*>)/i, `$1${processedHtml}`);
+          // Insert after <body> tag
+          finalBody = existingBody.replace(/(<body[^>]*>)/i, `$1${processedHtml}<br><br>`);
         } else {
+          // Prepend our content before the signature
           finalBody = processedHtml + '<br><br>' + existingBody;
         }
+      } else {
+        console.log("No signature detected");
       }
     }
 

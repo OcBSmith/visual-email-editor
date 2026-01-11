@@ -19,7 +19,7 @@ Design emails by dragging and dropping components: images, text, buttons, column
 Based on MJML, the industry standard. Your emails will look perfect on any device and email client including Gmail, Outlook, and Apple Mail.
 
 **📏 WYSIWYG Design**
-What you see in the editor is exactly what appears in Thunderbird. No surprises!
+What you see in the editor is exactly what appears in Thunderbird. Standard **640px** width for professional results. No surprises!
 
 **🤖 Integrated Artificial Intelligence**
 Generate complete emails describing what you want. Use free AI models like Llama 3.3, Mixtral, and Gemma via Groq.

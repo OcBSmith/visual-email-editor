@@ -43,7 +43,7 @@ Design professional emails by dragging and dropping components. No HTML coding r
 Built on [MJML](https://mjml.io/), the industry standard. Your emails will look perfect on any device and email client.
 
 ### 📏 WYSIWYG Design
-What you see is what you get! The editor preview matches exactly how your email will appear in Thunderbird and Gmail.
+What you see in the editor is exactly what appears in Thunderbird. Standard **640px** width for professional results. No surprises!
 
 ### 🤖 Integrated Artificial Intelligence
 Generate complete emails just by describing what you want. Uses free AI models through [Groq](https://groq.com/):
@@ -111,8 +111,9 @@ Generate complete emails just by describing what you want. Uses free AI models t
 |----------|--------|
 | `Ctrl + S` | Save template |
 | `Ctrl + Z` | Undo |
-| `Ctrl + Y` | Redo |
+| `Ctrl + Y` / `Ctrl + Shift + Z` | Redo |
 | `Esc` | Close modal |
+| `New Button` | Start from scratch (Empty canvas) |
 
 ---
 

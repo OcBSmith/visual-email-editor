@@ -145,7 +145,7 @@ const editor = grapesjs.init({
     },
 
     // Device manager for responsive preview
-    // Desktop uses full width canvas, MJML content (600px) is centered like in Thunderbird
+    // Desktop uses full width canvas, MJML content (640px) is centered like in Thunderbird
     deviceManager: {
         devices: [
             { name: 'Desktop', width: '' },
@@ -177,7 +177,7 @@ const TEMPLATE_LIBRARY = [
       <mj-button background-color="#0a84ff" color="#ffffff" border-radius="8px" font-weight="600" />
     </mj-attributes>
   </mj-head>
-  <mj-body background-color="#f5f5f5">
+  <mj-body background-color="#f5f5f5" width="640px">
     <mj-section padding="30px 0 10px 0">
       <mj-column>
         <mj-image src="https://www.thunderbird.net/media/img/thunderbird/logos/release.png" width="80px" alt="Thunderbird" />
@@ -185,11 +185,11 @@ const TEMPLATE_LIBRARY = [
     </mj-section>
     <mj-section background-color="#ffffff" border-radius="16px" padding="40px 20px">
       <mj-column>
-        <mj-text align="center" font-size="38px" font-weight="300" color="#1a1a1a" padding-bottom="0">
-          Welcome to <span style="color: #0a84ff; font-style: italic;">Freedom</span>
+        <mj-text align="center" font-size="38px" font-weight="bold" color="#1a1a1a" padding-bottom="0">
+          Welcome to <span style="color: #0a84ff; font-style: italic; font-weight: bold;">Freedom</span>
         </mj-text>
         <mj-text align="center" font-size="18px" color="#666666" padding="20px 40px">
-          Tu mensaje ha sido creado con el editor visual de Thunderbird. Disfruta de la productividad, privacidad y libertad que te ofrecemos.
+          Tu mensaje ha sido creado con el editor visual de <strong>Thunderbird</strong>. Disfruta de la productividad, privacidad y libertad que te ofrecemos.
         </mj-text>
       </mj-column>
     </mj-section>
@@ -253,7 +253,7 @@ const TEMPLATE_LIBRARY = [
       <mj-all font-family="Inter, Arial, sans-serif" />
     </mj-attributes>
   </mj-head>
-  <mj-body background-color="#fee2e2">
+  <mj-body background-color="#fee2e2" width="640px">
     <mj-section padding="20px">
       <mj-column>
         <mj-text align="center" font-size="14px" font-weight="bold" color="#dc2626" text-transform="uppercase" letter-spacing="2px">
@@ -295,7 +295,7 @@ const TEMPLATE_LIBRARY = [
       <mj-all font-family="Inter, Arial, sans-serif" />
     </mj-attributes>
   </mj-head>
-  <mj-body background-color="#f3f4f6">
+  <mj-body background-color="#f3f4f6" width="640px">
     <mj-section background-color="#1f2937" padding="20px">
       <mj-column>
         <mj-text color="#ffffff" font-size="20px" font-weight="bold">
@@ -305,7 +305,7 @@ const TEMPLATE_LIBRARY = [
     </mj-section>
     <mj-section background-color="#ffffff" padding="20px">
       <mj-column>
-        <mj-image src="https://via.placeholder.com/600x350?text=Featured+Story" />
+        <mj-image src="https://via.placeholder.com/640x350?text=Featured+Story" />
         <mj-text font-size="24px" font-weight="bold" color="#111827">
           Our Main Story Highlight
         </mj-text>
@@ -398,6 +398,44 @@ editor.on('component:remove', () => {
 
 // Initial size calculation
 setTimeout(updateEmailSize, 1000);
+
+// ===== NEW DESIGN =====
+document.getElementById('btnNew').addEventListener('click', () => {
+    const content = `
+        <div style="text-align: center; padding: 20px;">
+            <p style="margin-bottom: 20px; font-size: 16px;">¿Estás seguro de que quieres empezar un nuevo diseño?</p>
+            <p style="color: var(--text-secondary); font-size: 14px;">Se perderán todos los cambios que no hayas guardado como plantilla.</p>
+        </div>
+    `;
+
+    showModal('Nuevo Diseño', content, [
+        { text: 'Cancelar', primary: false, action: hideModal },
+        {
+            text: 'Empezar de cero', primary: true, class: 'btn-danger', action: () => {
+                // Basic MJML structure to start with
+                const emptyTemplate = `
+<mjml>
+  <mj-head>
+    <mj-attributes>
+      <mj-all font-family="'Segoe UI', Inter, Arial, sans-serif" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body width="640px">
+    <mj-section>
+      <mj-column>
+        <mj-text align="center">Empieza a diseñar tu email aquí...</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>`;
+                editor.setComponents(emptyTemplate);
+                hideModal();
+                showToast('Nuevo diseño iniciado');
+                updateEmailSize();
+            }
+        }
+    ]);
+});
 
 // ===== IMPORT HTML =====
 const htmlFileInput = document.getElementById('htmlFileInput');
@@ -804,24 +842,45 @@ async function getCompiledHtml() {
 
         if (result && result.html) {
             // Clean the HTML for Thunderbird by removing Outlook conditional comments
-            let cleanHtml = result.html;
+            let fullHtml = result.html;
 
             // Remove <!--[if mso]>...<![endif]--> and similar
-            cleanHtml = cleanHtml.replace(/<!--\[if[^\]]*\]>[\s\S]*?<!\[endif\]-->/gi, '');
-            cleanHtml = cleanHtml.replace(/<!--\[if[^\]]*\]><!-->/gi, '');
-            cleanHtml = cleanHtml.replace(/<!--<!\[endif\]-->/gi, '');
+            fullHtml = fullHtml.replace(/<!--\[if[^\]]*\]>[\s\S]*?<!\[endif\]-->/gi, '');
+            fullHtml = fullHtml.replace(/<!--\[if[^\]]*\]><!-->/gi, '');
+            fullHtml = fullHtml.replace(/<!--<!\[endif\]-->/gi, '');
 
             // Remove mso-* styles within style attributes
-            cleanHtml = cleanHtml.replace(/mso-[^:;]+:[^;]+;?/gi, '');
+            fullHtml = fullHtml.replace(/mso-[^:;]+:[^;]+;?/gi, '');
 
             // Remove empty comments
-            cleanHtml = cleanHtml.replace(/<!--\s*-->/g, '');
+            fullHtml = fullHtml.replace(/<!--\s*-->/g, '');
 
             // Clean up extra whitespace
-            cleanHtml = cleanHtml.replace(/\n\s*\n\s*\n/g, '\n\n');
+            fullHtml = fullHtml.replace(/\n\s*\n\s*\n/g, '\n\n');
 
-            // Keep MJML's 600px width for WYSIWYG consistency with Thunderbird
-            // Thunderbird ignores CSS width properties, so we keep pixel widths
+            // --- IMPROVEMENT: Extract only body content and styles to avoid double <html> tags ---
+            let bodyContent = '';
+            const bodyMatch = fullHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+            if (bodyMatch) {
+                bodyContent = bodyMatch[1].trim();
+            } else {
+                bodyContent = fullHtml; // Fallback
+            }
+
+            // Extract styles from head
+            let styles = '';
+            const styleMatches = fullHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
+            if (styleMatches) {
+                styles = styleMatches.join('\n');
+            }
+
+            // Wrap in a 640px centered container for consistency with Thunderbird and signature
+            const cleanHtml = `
+                ${styles}
+                <div class="visual-editor-container" style="max-width: 640px; margin: 0 auto; box-sizing: border-box;">
+                    ${bodyContent}
+                </div>
+            `.trim();
 
             console.log('Cleaned HTML length:', cleanHtml.length);
             return cleanHtml;
@@ -856,12 +915,12 @@ async function getCompiledHtml() {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4;">
 <tr>
 <td align="center" style="padding: 20px 0;">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%;">
+<table role="presentation" width="640" cellpadding="0" cellspacing="0" style="max-width: 640px; width: 100%;">
 `;
 
     // Find mj-section rendered elements
     const sections = body.querySelectorAll('[data-gjs-type="mj-section"]');
-    let contentElements = sections.length > 0 ? sections : body.querySelectorAll('div[style*="max-width: 600px"], div[style*="max-width:600px"]');
+    let contentElements = sections.length > 0 ? sections : body.querySelectorAll('div[style*="max-width: 640px"], div[style*="max-width:640px"]');
 
     if (contentElements.length === 0) {
         contentElements = [body];
@@ -1088,8 +1147,8 @@ editor.on('component:selected', () => {
     if (stylesTab) stylesTab.click();
 });
 
-// Limit width to 600px max for MJML components
-const MAX_WIDTH = 600;
+// Limit width to 640px max for MJML components
+const MAX_WIDTH = 640;
 editor.on('component:update', (component) => {
     if (!component) return;
 
