@@ -64,6 +64,26 @@ Actualmente, el manejo de imágenes requiere copiar URLs.
 *   **Botón Clean (Limpiar Lienzo):** Borrar todo el email con un clic confirmando.
 *   **Importar Código (Import Editor):** Un botón que despliegue un modal con código (ya sea HTML o MJML). Si pegas código copiado de internet, la herramienta lo compila dinámicamente y lo transforma en bloques arrastrables.
 
+## FASE 5: Expansión de Herramientas Internas (Documentación Oficial GrapesJS)
+
+Tras repasar la documentación oficial de GrapesJS, existen módulos adicionales que podríamos implementar directamente en tu aplicación para profesionalizarla aún más:
+
+### 5.1. Custom Component Manager (Componentes a Medida)
+*   **Posibilidad:** Podemos crear componentes que no existen en el estándar de MJML pero que los clientes email soportan. Ej: Un "Bloque de Firma de la UMA" o un "Bloque de Cita Destacada".
+*   **Aplicación:** Se registran nuevos tipos de modelos (`editor.DomComponents.addType()`).
+
+### 5.2. Command System (Barra de Herramientas Avanzada)
+*   **Posibilidad:** Todo botón en GrapesJS invoca un comando (`editor.Commands`). 
+*   **Aplicación:** Podemos añadir botones al *Panel superior* que interactúen con tu IA ("Traducir este bloque de texto") nativamente desde la toolbar superior, no solo desde un modal flotante.
+
+### 5.3. Rich Text Editor (RTE) Customizado
+*   **Posibilidad:** La barra de formato de texto (negrita, cursiva, enlaces) que aparece al hacer doble clic en un texto es personalizable.
+*   **Aplicación:** Inyectar el ícono de las "Chispas de IA" directamente en la pequeña barra de edición de texto de GrapesJS (`editor.RichTextEditor.add()`), lo que permite que el usuario sombree una sola frase, haga clic en la chispa de IA, y pida al asistente *re-escribir solo ese trocito*.
+
+### 5.4. Storage Manager Avanzado (Guardado Remoto)
+*   **Posibilidad:** Actualmente dependemos mucho del LocalStorage o exportaciones manuales.
+*   **Aplicación:** Se puede configurar el `editor.StorageManager` para lanzar peticiones POST/GET a tu propio backend y mantener las plantillas centralizadas, control de versiones, o guardado automático cada X segundos directo a nube.
+
 ---
 
 ## ¿CÓMO LO HAREMOS MAÑANA? (Metodología)
