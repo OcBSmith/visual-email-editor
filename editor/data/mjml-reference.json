@@ -1,0 +1,51 @@
+{
+  "version": "4.12.0",
+  "name": "MJML Knowledge Base",
+  "description": "Technical reference for MJML v4 components and attributes.",
+  "global_rules": [
+    "Root tag is always <mjml>.",
+    "Body tag is <mj-body>.",
+    "Structural components: <mj-section>, <mj-column>, <mj-group>, <mj-wrapper>.",
+    "Layout Hierarchy: mjml -> mj-body -> mj-section -> mj-column -> components.",
+    "Content tags (mj-text, mj-image, mj-button, etc.) MUST be inside an <mj-column>.",
+    "Sections cannot be nested. Use <mj-wrapper> if you need to wrap multiple sections.",
+    "Tags are case-sensitive and must be lowercase."
+  ],
+  "components": {
+    "mj-body": {
+      "attributes": ["width", "background-color"],
+      "default_width": "600px"
+    },
+    "mj-section": {
+      "attributes": ["background-color", "background-url", "background-repeat", "padding", "border", "border-radius", "text-align"],
+      "description": "A horizontal block. Must contain mj-column or mj-group."
+    },
+    "mj-column": {
+      "attributes": ["width", "vertical-align", "background-color", "border", "padding", "border-radius"],
+      "description": "A vertical container inside a section. Usually width is percentage or pixels summing to section width."
+    },
+    "mj-text": {
+      "attributes": ["color", "font-family", "font-size", "font-weight", "line-height", "align", "padding", "text-decoration", "text-transform"],
+      "description": "The only way to render text content."
+    },
+    "mj-button": {
+      "attributes": ["href", "background-color", "color", "font-size", "font-weight", "border-radius", "padding", "inner-padding", "width", "align"],
+      "description": "Call to action button."
+    },
+    "mj-image": {
+      "attributes": ["src", "alt", "width", "height", "padding", "border-radius", "href", "align"],
+      "description": "Responsive image component."
+    },
+    "mj-style": {
+      "attributes": ["inline"],
+      "description": "Used in <mj-head> for CSS. Use inline=\"inline\" for maximum compatibility.",
+      "special_use": "Essential for gradients and hover effects."
+    }
+  },
+  "best_practices": [
+    "Always use fallback fonts like 'Arial, sans-serif'.",
+    "Gradients should be implemented via <mj-style inline=\"inline\"> classes.",
+    "Use padding instead of margins for spacing.",
+    "Keep total email width around 600px for optimal consistency."
+  ]
+}

@@ -1,0 +1,30 @@
+{
+    "name":  "plugin-thunderbird",
+    "version":  "1.0.0",
+    "description":  "\u003cdiv align=\"center\"\u003e",
+    "main":  "background.js",
+    "directories":  {
+                        "doc":  "docs"
+                    },
+    "scripts":  {
+                    "test":  "jest"
+                },
+    "repository":  {
+                       "type":  "git",
+                       "url":  "git+https://github.com/OcBSmith/visual-email-editor.git"
+                   },
+    "keywords":  [
+
+                 ],
+    "author":  "",
+    "license":  "ISC",
+    "type":  "commonjs",
+    "bugs":  {
+                 "url":  "https://github.com/OcBSmith/visual-email-editor/issues"
+             },
+    "homepage":  "https://github.com/OcBSmith/visual-email-editor#readme",
+    "devDependencies":  {
+                            "jest":  "^30.3.0",
+                            "jest-environment-jsdom":  "^30.3.0"
+                        }
+}

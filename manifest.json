@@ -21,7 +21,9 @@
   "permissions": [
     "compose",
     "tabs",
-    "storage"
+    "storage",
+    "https://api.groq.com/*",
+    "http://localhost/*"
   ],
   "background": {
     "scripts": [

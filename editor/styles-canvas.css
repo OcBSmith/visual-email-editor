@@ -1,0 +1,185 @@
+/* Visual Email Editor - Canvas Styles */
+/* Canvas container, GrapesJS overrides, code preview */
+
+/* ===== CANVAS ===== */
+.canvas-container {
+    flex: 1;
+    background: var(--bg-tertiary);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+#gjs {
+    flex: 1;
+    height: 100%;
+}
+
+/* ===== GRAPESJS OVERRIDES ===== */
+.gjs-one-bg {
+    background-color: var(--bg-secondary) !important;
+}
+
+.gjs-two-color {
+    color: var(--text) !important;
+}
+
+.gjs-three-bg {
+    background-color: var(--surface) !important;
+}
+
+.gjs-four-color,
+.gjs-four-color-h:hover {
+    color: var(--primary) !important;
+}
+
+/* Blocks */
+.gjs-block {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+    margin: 6px !important;
+    min-height: auto !important;
+    width: calc(50% - 12px) !important;
+    transition: all var(--transition-fast) !important;
+}
+
+.gjs-block:hover {
+    background: var(--surface-hover) !important;
+    border-color: var(--primary) !important;
+    box-shadow: var(--shadow-glow) !important;
+}
+
+.gjs-block-label {
+    font-size: 11px !important;
+    color: var(--text-secondary) !important;
+}
+
+.gjs-block svg {
+    fill: var(--text-secondary) !important;
+}
+
+/* Canvas Frame */
+.gjs-frame {
+    background: white !important;
+    box-shadow: var(--shadow-lg) !important;
+    border-radius: 4px !important;
+    width: 100% !important;
+}
+
+body.is-desktop-view .gjs-frame {
+    max-width: none !important;
+    min-width: var(--mjml-width, 600px) !important;
+    margin: 0 auto !important;
+}
+
+.gjs-cv-canvas {
+    background: var(--bg-tertiary) !important;
+    background-image:
+        radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0) !important;
+    background-size: 20px 20px !important;
+}
+
+/* Selected Component */
+.gjs-selected {
+    outline: 2px solid var(--primary) !important;
+    outline-offset: -2px !important;
+}
+
+/* Toolbar */
+.gjs-toolbar {
+    background: var(--bg-elevated) !important;
+    border-radius: 6px !important;
+    box-shadow: var(--shadow-md) !important;
+}
+
+.gjs-toolbar-item {
+    color: var(--text-secondary) !important;
+    transition: color var(--transition-fast) !important;
+}
+
+.gjs-toolbar-item:hover {
+    color: var(--primary) !important;
+}
+
+/* Rich Text Editor */
+.gjs-rte-toolbar {
+    background: var(--bg-elevated) !important;
+    border-radius: 6px !important;
+    box-shadow: var(--shadow-md) !important;
+}
+
+.gjs-rte-action {
+    color: var(--text-secondary) !important;
+}
+
+.gjs-rte-active {
+    color: var(--primary) !important;
+}
+
+/* Style Manager */
+.gjs-sm-sector-title {
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+
+.gjs-sm-sector {
+    border-color: var(--border) !important;
+}
+
+.gjs-sm-property {
+    margin-bottom: 8px !important;
+}
+
+.gjs-sm-label {
+    color: var(--text-secondary) !important;
+    font-size: 11px !important;
+}
+
+.gjs-field {
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
+    border-radius: 6px !important;
+    color: var(--text) !important;
+}
+
+.gjs-field:focus-within {
+    border-color: var(--primary) !important;
+}
+
+/* Layers */
+.gjs-layer {
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
+}
+
+.gjs-layer:hover {
+    background: var(--surface-hover) !important;
+}
+
+.gjs-layer.gjs-selected {
+    background: var(--primary-light) !important;
+}
+
+/* ===== CODE PREVIEW ===== */
+.code-preview {
+    background: var(--bg-primary);
+    border-radius: 8px;
+    padding: 16px;
+    overflow: auto;
+    max-height: 400px;
+}
+
+.code-preview pre {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-all;
+}

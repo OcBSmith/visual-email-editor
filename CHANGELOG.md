@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-04-19
+
+### ✨ Added
+
+- **Hybrid AI Support**
+  - **Groq API**: High-speed cloud AI.
+  - **LM Studio**: Full support for local AI models running on `localhost`.
+  - Dynamic model detection and selection for both providers.
+
+- **Conversational Design (AI Chat Sidebar)**
+  - New side panel for natural language design instructions.
+  - "Apply to design" logic that modifies MJML code directly from chat.
+  - Automatic scrolling and persistence during the session.
+
+- **Marketing AI Toolkit**
+  - **Subject Line Generator**: 5 optimized subjects for every email.
+  - **Spam Score Analyzer**: Risk detection and deliverability tips.
+  - **Preheader Generator**: Preview text optimization.
+
+- **Advanced Productivity Tools**
+  - **Translate All**: Full localization of the design (mj-text, mj-button, alt attributes).
+  - **Auto Alt-Text**: Context-aware accessibility descriptions for images.
+
+- **Enhanced AI Context (Contextual UI)**
+  - ✨ Button in component toolbar for text editing.
+  - 💡 Button in button components for CTA text suggestions.
+
+### 🔧 Fixed
+
+- **Content Insertion**: Resolved issue where AI-generated designs were not applying correctly to the editor.
+- **Markdown Sanitization**: Automatic removal of markdown code blocks (```mjml) from AI responses.
+- **Permissions**: Added missing host permissions for Groq and Localhost in `manifest.json`.
+
 ## [1.1.0] - 2026-01-11
 
 ### ✨ Added

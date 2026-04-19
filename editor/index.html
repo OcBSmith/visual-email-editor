@@ -8,170 +8,202 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="lib/grapes.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles-layout.css">
+    <link rel="stylesheet" href="styles-ui.css">
+    <link rel="stylesheet" href="styles-canvas.css">
 </head>
 
 <body>
     <!-- Top Toolbar -->
     <header class="editor-header">
-        <div class="header-left">
-            <div class="logo">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                    <polyline points="22,6 12,13 2,6" />
-                </svg>
+        <!-- Row 1: Brand, Mode and Global Actions -->
+        <div class="header-row header-top">
+            <div class="header-left">
+                <div class="logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                </div>
+                <h1>Visual Email Editor</h1>
             </div>
-            <h1>Visual Email Editor</h1>
+            <div class="header-center">
+                <div class="device-buttons">
+                    <button id="deviceDesktop" class="device-btn active" title="Desktop">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" />
+                            <line x1="8" y1="21" x2="16" y2="21" />
+                            <line x1="12" y1="17" x2="12" y2="21" />
+                        </svg>
+                    </button>
+                    <button id="deviceTablet" class="device-btn" title="Tablet">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="4" y="2" width="16" height="20" rx="2" />
+                            <line x1="12" y1="18" x2="12.01" y2="18" />
+                        </svg>
+                    </button>
+                    <button id="deviceMobile" class="device-btn" title="Mobile">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="5" y="2" width="14" height="20" rx="2" />
+                            <line x1="12" y1="18" x2="12.01" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="width-control-group">
+                    <i class="fa fa-arrows-h"></i>
+                    <input type="number" id="emailWidthInput" class="width-input" value="600" min="320" max="1200" step="10">
+                    <span>px</span>
+                </div>
+                <div id="aiStatusIndicator" class="ai-status">
+                    <span class="status-dot"></span>
+                    <span id="aiStatusName" class="status-name">AI Offline</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button id="btnInsertEmail" class="btn-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                    Insertar en Email
+                </button>
+            </div>
         </div>
 
-        <div class="header-center">
-            <div class="device-buttons">
-                <button id="deviceDesktop" class="device-btn active" title="Desktop">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                        <line x1="8" y1="21" x2="16" y2="21" />
-                        <line x1="12" y1="17" x2="12" y2="21" />
+        <!-- Row 2: All Tools -->
+        <div class="header-row header-bottom">
+            <div class="tools-group">
+                <button id="btnUndo" class="toolbar-btn" title="Deshacer (Ctrl+Z)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 7v6h6" />
+                        <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
                     </svg>
                 </button>
-                <button id="deviceTablet" class="device-btn" title="Tablet">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
-                        <line x1="12" y1="18" x2="12.01" y2="18" />
+                <button id="btnRedo" class="toolbar-btn" title="Rehacer (Ctrl+Y)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 7v6h-6" />
+                        <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7" />
                     </svg>
                 </button>
-                <button id="deviceMobile" class="device-btn" title="Mobile">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-                        <line x1="12" y1="18" x2="12.01" y2="18" />
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Email Size Indicator -->
-            <div id="sizeIndicator" class="size-indicator" title="Estimated email size">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" width="16" height="16">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                <span id="sizeValue">0 KB</span>
-            </div>
-        </div>
-
-        <div class="header-right">
-            <!-- Undo/Redo -->
-            <button id="btnUndo" class="toolbar-btn" title="Deshacer (Ctrl+Z)">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
-                    <path d="M3 7v6h6" />
-                    <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
-                </svg>
-            </button>
-            <button id="btnRedo" class="toolbar-btn" title="Rehacer (Ctrl+Y)">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
-                    <path d="M21 7v6h-6" />
-                    <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7" />
-                </svg>
-                <!-- New Design -->
-                <button id="btnNew" class="toolbar-btn" title="Nuevo diseño (Empezar de cero)">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
+                <button id="btnNew" class="toolbar-btn" title="Nuevo diseño">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                         <polyline points="14 2 14 8 20 8" />
                         <line x1="12" y1="18" x2="12" y2="12" />
                         <line x1="9" y1="15" x2="15" y2="15" />
                     </svg>
                 </button>
+                <div id="sizeIndicator" class="size-indicator" title="Estimated size">
+                    <span id="sizeValue">0 KB</span>
+                </div>
+            </div>
 
-                <div class="separator"></div>
+            <div class="separator"></div>
 
-                <!-- Import HTML -->
+            <div class="tools-group tools-file">
                 <button id="btnImportHtml" class="toolbar-btn" title="Importar HTML">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                         <polyline points="17 8 12 3 7 8" />
                         <line x1="12" y1="3" x2="12" y2="15" />
                     </svg>
                 </button>
-
-                <!-- Save/Load Templates -->
                 <button id="btnSaveTemplate" class="toolbar-btn" title="Guardar plantilla">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
                         <polyline points="17 21 17 13 7 13 7 21" />
                         <polyline points="7 3 7 8 15 8" />
                     </svg>
                 </button>
-                <button id="btnLoadTemplate" class="toolbar-btn" title="Saved Templates">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
+                <button id="btnExport" class="toolbar-btn" title="Exportar MJML/HTML">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                </button>
+                <button id="btnLoadTemplate" class="toolbar-btn" title="Plantillas Guardadas">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                     </svg>
                 </button>
-                <button id="btnLibrary" class="toolbar-btn" title="Template Library">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
+                <button id="btnLibrary" class="toolbar-btn" title="Biblioteca">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                     </svg>
                 </button>
+            </div>
 
-                <div class="separator"></div>
+            <div class="separator"></div>
 
-                <!-- Preview/Code -->
+            <div class="tools-group tools-view">
                 <button id="btnPreview" class="toolbar-btn" title="Vista previa">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                         <circle cx="12" cy="12" r="3" />
                     </svg>
                 </button>
-                <button id="btnViewCode" class="toolbar-btn" title="Ver código HTML">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
+                <button id="btnViewCode" class="toolbar-btn" title="Ver código MJML">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="16 18 22 12 16 6" />
                         <polyline points="8 6 2 12 8 18" />
                     </svg>
                 </button>
-
-
-                <div class="separator"></div>
-
-                <!-- AI Generate -->
-                <button id="btnAIGenerate" class="toolbar-btn ai-btn" title="Generar con IA">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <path
-                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                <button id="btnFullscreen" class="toolbar-btn" title="Pantalla completa">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
                     </svg>
                 </button>
-                <button id="btnAIConfig" class="toolbar-btn" title="Configurar IA">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="tools-group ai-tools">
+                <button id="btnAIGenerate" class="toolbar-btn ai-btn" title="Generar Email Completo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                </button>
+                <button id="btnAISubject" class="toolbar-btn" title="Generar Asunto">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                </button>
+                <button id="btnAISpam" class="toolbar-btn" title="Análisis de Spam">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="M12 8v4"/><path d="M12 16h.01"/>
+                    </svg>
+                </button>
+                <button id="btnAIPreheader" class="toolbar-btn" title="Optimizar Preheader">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                    </svg>
+                </button>
+                <button id="btnAITranslateAll" class="toolbar-btn" title="Traducir Todo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M2 12h20" />
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                    </svg>
+                </button>
+                <button id="btnAIAlt" class="toolbar-btn" title="Alt Text para Imágenes">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                </button>
+                <button id="btnAIConfig" class="toolbar-btn" title="Configuración IA">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3" />
-                        <path
-                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                     </svg>
                 </button>
-
-                <div class="separator"></div>
-
-                <button id="btnInsertEmail" class="btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <line x1="22" y1="2" x2="11" y2="13" />
-                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                    </svg>
-                    Insertar en Email
-                </button>
+            </div>
         </div>
     </header>
 
@@ -182,19 +214,47 @@
             <div id="blocks" class="blocks-container"></div>
         </aside>
 
+        <div class="panel-resizer" id="resizer-left"></div>
+
         <div class="canvas-container">
             <div id="gjs"></div>
         </div>
+
+        <div class="panel-resizer" id="resizer-right"></div>
 
         <aside class="panel panel-right">
             <div class="panel-tabs">
                 <button class="panel-tab active" data-panel="styles">Estilos</button>
                 <button class="panel-tab" data-panel="traits">Propiedades</button>
+                <button class="panel-tab" data-panel="ai-chat">AI Chat ✨</button>
                 <button class="panel-tab" data-panel="layers">Capas</button>
             </div>
             <div class="panel-content">
                 <div id="styles-container" class="panel-section active"></div>
                 <div id="traits-container" class="panel-section"></div>
+                <!-- AI Chat Panel -->
+                <div id="ai-chat-container" class="panel-section" style="flex-direction: column; height: 100%; overflow: hidden;">
+                    <div id="chatMessages" class="chat-messages" style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+                        <div class="message system" style="background: var(--surface); padding: 8px 12px; border-radius: 8px; font-size: 12px; border-left: 3px solid var(--primary);">
+                            ¡Hola! Soy tu asistente de diseño. Puedes pedirme cambios como:
+                            <ul style="margin: 8px 0; padding-left: 20px;">
+                                <li>"Cambia el color de fondo a azul suave"</li>
+                                <li>"Pon el botón en rojo"</li>
+                                <li>"Añade una sección de 3 columnas"</li>
+                                <li>"Mejora los textos para que sean más comerciales"</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="chat-input-container" style="padding: 12px; border-top: 1px solid var(--border); background: var(--surface);">
+                        <div style="display: flex; gap: 8px;">
+                            <textarea id="chatInput" placeholder="Describe un cambio..." rows="2" 
+                                      style="flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 8px; font-size: 12px; resize: none; background: var(--bg); color: var(--text);"></textarea>
+                            <button id="btnSendChat" style="background: var(--primary); color: white; border: none; border-radius: 6px; width: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <div id="layers-container" class="panel-section"></div>
             </div>
         </aside>
@@ -220,7 +280,18 @@
 
     <script src="lib/grapes.min.js"></script>
     <script src="lib/grapesjs-mjml.min.js"></script>
-    <script src="ai-service.js"></script>
+    <script src="editor-utils.js"></script>
+    <script src="templates-data.js"></script>
+    <script src="ui-manager.js"></script>
+    <script src="providers/groq-provider.js"></script>
+    <script src="providers/openrouter-provider.js"></script>
+    <script src="providers/lmstudio-provider.js"></script>
+    <script src="ai-api.js"></script>
+    <script src="import-export.js"></script>
+    <script src="preview-controls.js"></script>
+    <script src="template-ui.js"></script>
+    <script src="ai-handlers.js"></script>
+    <script src="editor-actions.js"></script>
     <script src="editor.js"></script>
 </body>
 

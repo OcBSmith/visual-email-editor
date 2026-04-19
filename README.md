@@ -42,22 +42,33 @@ Design professional emails by dragging and dropping components. No HTML coding r
 ### 📱 100% Responsive Emails
 Built on [MJML](https://mjml.io/), the industry standard. Your emails will look perfect on any device and email client.
 - **🎨 WYSIWYG Template Editor:** Drag-and-drop MJML components to build professional emails easily.
-- **🤖 AI Generation (Groq):** Generate complete designs from text descriptions and edit content with AI assistance.
+- **🤖 Hybrid AI Assistance:** 
+  - **Cloud:** High-quality results using [Groq API](https://groq.com/).
+  - **Local:** Full privacy and offline support with **LM Studio** integration.
+- **💬 AI Chat Sidebar (Conversational Design):** Edit your email using natural language. Ask things like *"Change the background to soft blue"* or *"Add a 3-column section"* and the AI will modify the design for you.
+- **✉️ Marketing AI Toolkit (Top Toolbar):**
+  - **Subject Line Generator:** 5 psychological hooks to improve open rates.
+  - **Spam Score Analyzer:** Detect spam triggers and receive deliverability advice.
+  - **Preheader Generator:** Perfect preview text (max 90 chars).
+- **🌍 Advanced Productivity:**
+  - **Translate All:** Localize the entire email (design + content) in one click.
+  - **Auto Alt-Text:** Automatically generate accessibility descriptions for all images.
 - **💾 Advanced Template System:** 
   - Save and load your designs locally.
   - Automatic overwrite support for existing template names.
   - Interactive library grid with **deletion functionality**.
   - Save AI results directly to your template library.
-- **📐 Thunderbird Native Standard:** Emails are optimized at **640px width** for perfect rendering and signature alignment.
+- **📐 Professional Layout:** Emails are optimized for Thunderbird rendering with dynamic width support (600px to 1200px+).
 - **🖼️ Deep Privacy:** Images are embedded directly (base64) or as absolute URLs. No external tracking or hidden dependencies.
 - **⚡ Fast Integration:** Insert your design into a Thunderbird compose window with a single click.
 
-### ✏️ AI-Powered Text Editing
+### ✏️ AI-Powered Text Editing (Rich Context)
 - **Improve**: Optimize copywriting
 - **Shorten**: Make text more concise
 - **Expand**: Add more details
-- **Translate**: Translate to any language
+- **Translate**: Translate specific blocks to any language
 - **Rewrite**: Change the tone (formal, casual, urgent...)
+- **💡 CTA Suggestions**: Specific AI tool for buttons to generate high-conversion call-to-actions.
 
 ---
 
@@ -117,7 +128,16 @@ AI integration is **optional** and uses the Groq API, which offers **free** AI m
 3. In the editor, click **"Configure AI"** (⚙️)
 4. Paste your API Key and select the desired model
 
-### Available Models
+### LM Studio (Local AI)
+For complete privacy, you can use a local model running in **LM Studio**.
+
+1. Download and install [LM Studio](https://lmstudio.ai/).
+2. Load your favorite model (e.g., Llama 3 8B, Phi-3).
+3. Start the **Local Server** (default: `http://localhost:1234`).
+4. **IMPORTANT**: Enable **CORS** in LM Studio settings to allow the extension to communicate with the server.
+5. In the editor, click **"Configure AI"** (⚙️), select **LM Studio**, and verify the URL.
+
+### Available Models (Groq)
 
 | Model | Description | Speed |
 |-------|-------------|-------|
@@ -197,9 +217,29 @@ If you find a bug or have a suggestion:
 
 ---
 
-## 📄 License
+## 🛠️ Development and Testing
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+The project is moving towards a modular architecture with a focus on code stability.
+
+### Setup
+Ensure you have [Node.js](https://nodejs.org/) installed, then run:
+```bash
+npm install
+```
+
+### Running Tests
+We use [Jest](https://jestjs.io/) to validate core logic in `editor-utils.js`.
+```bash
+npm test
+```
+
+### Documentation
+Detailed architectural docs can be found in [`docs/architecture.md`](docs/architecture.md).
+
+---
+
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
