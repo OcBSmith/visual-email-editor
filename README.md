@@ -119,16 +119,16 @@ Built on [MJML](https://mjml.io/), the industry standard. Your emails will look 
 
 ## 🤖 AI Configuration
 
-AI integration is **optional** and uses the Groq API, which offers **free** AI models.
+AI integration is **optional** and uses APIs like Groq or OpenRouter, which offer **free** AI models.
 
-### Getting an API Key
+### Cloud Providers (Groq & OpenRouter)
 
-1. Create a free account at [console.groq.com](https://console.groq.com)
-2. Go to **API Keys** and generate a new key
-3. In the editor, click **"Configure AI"** (⚙️)
-4. Paste your API Key and select the desired model
+1. Create a free account at [console.groq.com](https://console.groq.com) or [openrouter.ai](https://openrouter.ai).
+2. Go to their **API Keys** section and generate a new key.
+3. In the editor, click **"Configure AI"** (⚙️).
+4. Select your provider, paste your API Key, and select the desired model.
 
-### LM Studio (Local AI)
+### Local Privacy (LM Studio)
 For complete privacy, you can use a local model running in **LM Studio**.
 
 1. Download and install [LM Studio](https://lmstudio.ai/).
@@ -137,32 +137,31 @@ For complete privacy, you can use a local model running in **LM Studio**.
 4. **IMPORTANT**: Enable **CORS** in LM Studio settings to allow the extension to communicate with the server.
 5. In the editor, click **"Configure AI"** (⚙️), select **LM Studio**, and verify the URL.
 
-### Available Models (Groq)
+### Recommended Models
 
-| Model | Description | Speed |
-|-------|-------------|-------|
-| **Llama 3.3 70B** | Best quality | ⭐⭐⭐ |
-| **Llama 3.1 8B Instant** | Quality/speed balance | ⭐⭐⭐⭐⭐ |
-| **Mixtral 8x7B** | Long context | ⭐⭐⭐⭐ |
-| **Gemma 2 9B** | Compact and efficient | ⭐⭐⭐⭐ |
+| Model | Provider | Description | Speed |
+|-------|----------|-------------|-------|
+| **Llama 3.3 70B** | Groq / OpenRouter | Best reasoning & logic | ⭐⭐⭐ |
+| **Mixtral 8x7B** | Groq / OpenRouter | Long context & creative | ⭐⭐⭐⭐ |
+| **Llama 3.1 8B** | Groq / OpenRouter | Quality/speed balance | ⭐⭐⭐⭐⭐ |
+| **Google Gemini Flash** | OpenRouter (Free) | Great multilingual support | ⭐⭐⭐⭐⭐ |
 
 ---
 
-## 🔒 Privacy
+## 🔒 Privacy & Architecture Integrity
 
 - ✅ Your API Key is stored **locally** in Thunderbird
-- ✅ We don't send data to our own servers
-- ✅ AI requests go **directly to Groq**
-- ✅ No personal information is collected
+- ✅ No personal information is collected; we don't send data to our own servers.
+- ✅ **The Great Healer**: An internal stabilization engine prevents MJML compiling errors and attribute-css mismatches loops common in typical MJML-GrapesJS integrations.
+- ✅ **Architecture Safe-Mode**: Structural MJML layout (rows, columns) is fully locked when processing AI language translations, preventing the LLMs from destroying the template blueprint.
 
 ---
 
 ## 📖 Documentation
 
+- [Architecture Reference](docs/architecture.md) (Highly Recommended for Contributors)
 - [Contributing Guide](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Security Policy](SECURITY.md)
 
 ---
 
@@ -171,22 +170,26 @@ For complete privacy, you can use a local model running in **LM Studio**.
 ### Requirements
 
 - Thunderbird 115 or higher
-- No Node.js or build tools required
+- Node.js (Only required if you want to run Jest tests via `npm test`)
 
-### Project Structure
+### Project Structure (v6 Modular)
 
 ```
 visual-email-editor/
 ├── manifest.json        # Add-on configuration
 ├── background.js        # Background script
 ├── editor/
-│   ├── index.html       # Editor interface
-│   ├── editor.js        # Main logic
-│   ├── ai-service.js    # Groq integration
-│   ├── styles.css       # Styles
-│   └── lib/             # Libraries (GrapesJS, MJML)
+│   ├── index.html       # Editor interface 
+│   ├── editor.js        # Core Orchestrator
+│   ├── style-manager.js # CSS/MJML Alignment Sanitizer (Circuit Breaker)
+│   ├── import-export.js # "Great Healer" Parser & Compiler logic
+│   ├── ai-api.js        # AI LLM Routing Service
+│   ├── ai-handlers.js   # AI Modals & UI Events
+│   ├── providers/       # Abstraction for multiple LLM providers
+│   ├── styles/          # Modular CSS (.css files)
+│   └── lib/             # Third-Party Libraries (GrapesJS, MJML)
 ├── icons/               # Add-on icons
-└── docs/                # Additional documentation
+└── docs/                # Architecture and dev documentation
 ```
 
 ### Building the XPI

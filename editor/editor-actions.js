@@ -167,26 +167,37 @@ const EDITOR_ACTIONS = {
             return;
         }
 
-        const templateList = templates.map((t, i) => `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border);">
-                <div>
-                    <div style="font-weight: 500;">${escapeHtml(t.name)}</div>
-                    <div style="font-size: 11px; color: var(--text-muted);">${t.date}</div>
-                </div>
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn-secondary" onclick="EDITOR_ACTIONS.loadTemplate(${i})" style="padding: 6px 12px; font-size: 12px;">Load</button>
-                    <button class="btn-secondary" onclick="EDITOR_ACTIONS.deleteTemplate(${i})" style="padding: 6px 12px; font-size: 12px; color: var(--danger);">Delete</button>
-                </div>
-            </div>
-        `).join('');
-
         showModal('Saved Templates', `
-            <div style="max-height: 400px; overflow-y: auto;">
-                ${templateList}
+            <div style="max-height: 400px; overflow-y: auto;" id="savedTemplatesList">
+                ${templates.map((t, i) => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border);">
+                        <div>
+                            <div style="font-weight: 500;">${escapeHtml(t.name)}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">${t.date}</div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn-secondary btn-load-tpl" data-index="${i}" style="padding: 6px 12px; font-size: 12px;">Load</button>
+                            <button class="btn-secondary btn-delete-tpl" data-index="${i}" style="padding: 6px 12px; font-size: 12px; color: var(--danger);">Delete</button>
+                        </div>
+                    </div>
+                `).join('')}
             </div>
         `, [
             { text: 'Close', primary: false, action: hideModal }
         ]);
+
+        // Attach listeners manually (More robust than inline onclick)
+        setTimeout(() => {
+            const list = document.getElementById('savedTemplatesList');
+            if (list) {
+                list.querySelectorAll('.btn-load-tpl').forEach(btn => {
+                    btn.addEventListener('click', () => this.loadTemplate(parseInt(btn.getAttribute('data-index'))));
+                });
+                list.querySelectorAll('.btn-delete-tpl').forEach(btn => {
+                    btn.addEventListener('click', () => this.deleteTemplate(parseInt(btn.getAttribute('data-index'))));
+                });
+            }
+        }, 50);
     },
 
     getSavedTemplates() {
@@ -303,28 +314,44 @@ const EDITOR_ACTIONS = {
         try {
             const html = await IMPORT_EXPORT.getCompiledHtml();
             
-            showModal('Insert Email', `
-                <div class="form-group">
-                    <label>Your email is ready to insert into Thunderbird.</label>
-                    <p style="color: var(--text-secondary); font-size: 13px; margin-top: 8px;">
-                        Copy the HTML below and paste it into your Thunderbird compose window.
-                    </p>
-                </div>
-                <div class="form-group">
-                    <textarea id="insertEmailCode" class="form-input" rows="12" style="font-family: monospace; font-size: 11px;" readonly>${escapeHtml(html)}</textarea>
-                </div>
-            `, [
-                { text: 'Copy HTML', primary: true, action: () => {
-                    navigator.clipboard.writeText(html).then(() => {
-                        showToast('HTML copied to clipboard', 'success');
-                        hideModal();
-                    });
-                }},
-                { text: 'Close', primary: false, action: hideModal }
-            ]);
+            showToast('Preparando email para Thunderbird...', 'info');
+            
+            const response = await browser.runtime.sendMessage({
+                action: "insertHtmlToCompose",
+                html: html
+            });
+
+            if (response && response.success) {
+                showToast('Email insertado correctamente', 'success');
+            } else {
+                throw new Error(response?.error || 'Error desconocido al insertar');
+            }
         } catch (e) {
-            showToast('Error preparing email: ' + e.message, 'error');
+            console.error('Insert Email Error:', e);
+            showToast('Error al insertar: ' + e.message, 'error');
+            
+            // Fallback: show the modal if messaging fails
+            this.showInsertEmailFallback(await IMPORT_EXPORT.getCompiledHtml());
         }
+    },
+
+    showInsertEmailFallback(html) {
+        showModal('Insert Email (Manual)', `
+            <div class="form-group">
+                <label>No se pudo insertar automáticamente. Copia el HTML manualmente:</label>
+            </div>
+            <div class="form-group">
+                <textarea id="insertEmailCode" class="form-input" rows="12" style="font-family: monospace; font-size: 11px;" readonly>${escapeHtml(html)}</textarea>
+            </div>
+        `, [
+            { text: 'Copiar HTML', primary: true, action: () => {
+                navigator.clipboard.writeText(html).then(() => {
+                    showToast('HTML copiado', 'success');
+                    hideModal();
+                });
+            }},
+            { text: 'Cerrar', primary: false, action: hideModal }
+        ]);
     }
 };
 

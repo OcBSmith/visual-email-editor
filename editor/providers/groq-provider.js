@@ -38,7 +38,9 @@ const GroqProvider = {
 
         if (!response.ok) {
             const error = await response.json().catch(() => ({}));
-            throw new Error(error.error?.message || `Error Groq (${response.status})`);
+            console.error('[Groq] API Error Detail:', error);
+            const msg = error.error?.message || `Error Groq (${response.status})`;
+            throw new Error(msg);
         }
 
         const data = await response.json();

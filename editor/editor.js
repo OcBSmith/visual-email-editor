@@ -23,125 +23,21 @@ const editor = grapesjs.init({
     },
 
     // Style manager configuration
-    styleManager: {
-        appendTo: '#styles-container',
-        sectors: [
-            {
-                name: 'Alignment',
-                open: true,
-                properties: [
-                    {
-                        type: 'radio', name: 'Horizontal', property: 'text-align',
-                        defaults: 'left',
-                        options: [
-                            { value: 'left', title: 'Left', className: 'fa fa-align-left' },
-                            { value: 'center', title: 'Center', className: 'fa fa-align-center' },
-                            { value: 'right', title: 'Right', className: 'fa fa-align-right' },
-                            { value: 'justify', title: 'Justify', className: 'fa fa-align-justify' }
-                        ]
-                    },
-                    {
-                        type: 'select', name: 'Vertical', property: 'vertical-align',
-                        options: [
-                            { value: 'top', name: 'Top' },
-                            { value: 'middle', name: 'Middle' },
-                            { value: 'bottom', name: 'Bottom' }
-                        ]
-                    }
-                ]
-            },
-            {
-                name: 'Dimension',
-                open: false,
-                properties: [
-                    { type: 'integer', name: 'width', property: 'width', units: ['px', '%'] },
-                    { type: 'integer', name: 'height', property: 'height', units: ['px', '%', 'auto'] },
-                    { type: 'integer', name: 'max-width', property: 'max-width', units: ['px', '%'] },
-                    { type: 'integer', name: 'padding', property: 'padding', units: ['px', '%'] },
-                    {
-                        type: 'select', name: 'Horizontal Align', property: 'margin',
-                        options: [
-                            { value: '0', name: 'Left' },
-                            { value: '0 auto', name: 'Center' },
-                            { value: '0 0 0 auto', name: 'Right' }
-                        ]
-                    }
-                ]
-            },
-            {
-                name: 'Typography',
-                open: false,
-                properties: [
-                    {
-                        type: 'select', name: 'font-family', property: 'font-family',
-                        options: [
-                            { value: 'Arial, sans-serif', name: 'Arial' },
-                            { value: 'Helvetica, sans-serif', name: 'Helvetica' },
-                            { value: 'Georgia, serif', name: 'Georgia' },
-                            { value: 'Times New Roman, serif', name: 'Times New Roman' },
-                            { value: 'Verdana, sans-serif', name: 'Verdana' }
-                        ]
-                    },
-                    { type: 'integer', name: 'font-size', property: 'font-size', units: ['px', 'em'] },
-                    {
-                        type: 'select', name: 'font-weight', property: 'font-weight',
-                        options: [
-                            { value: '300', name: 'Light' },
-                            { value: '400', name: 'Normal' },
-                            { value: '500', name: 'Medium' },
-                            { value: '600', name: 'Semi Bold' },
-                            { value: '700', name: 'Bold' }
-                        ]
-                    },
-                    { type: 'color', name: 'color', property: 'color' },
-                    { type: 'integer', name: 'line-height', property: 'line-height', units: ['px', 'em', '%'] }
-                ]
-            },
-            {
-                name: 'Background',
-                open: false,
-                properties: [
-                    { type: 'color', name: 'background-color', property: 'background-color' },
-                    { type: 'file', name: 'background-image', property: 'background-image' },
-                    {
-                        type: 'select', name: 'background-size', property: 'background-size',
-                        options: [
-                            { value: 'auto', name: 'Auto' },
-                            { value: 'cover', name: 'Cover' },
-                            { value: 'contain', name: 'Contain' }
-                        ]
-                    }
-                ]
-            },
-            {
-                name: 'Borders',
-                open: false,
-                properties: [
-                    { type: 'integer', name: 'border-radius', property: 'border-radius', units: ['px', '%'] },
-                    { type: 'integer', name: 'border-width', property: 'border-width', units: ['px'] },
-                    {
-                        type: 'select', name: 'border-style', property: 'border-style',
-                        options: [
-                            { value: 'none', name: 'None' },
-                            { value: 'solid', name: 'Solid' },
-                            { value: 'dashed', name: 'Dashed' },
-                            { value: 'dotted', name: 'Dotted' }
-                        ]
-                    },
-                    { type: 'color', name: 'border-color', property: 'border-color' }
-                ]
-            }
-        ]
-    },
+    styleManager: STYLE_MANAGER.getConfig(),
 
-    // Trait manager
-    traitManager: {
-        appendTo: '#traits-container'
-    },
-
-    // Layer manager
+    // Layer manager configuration
     layerManager: {
         appendTo: '#layers-container'
+    },
+
+    // Selector manager configuration
+    selectorManager: {
+        appendTo: '#styles-container'
+    },
+
+    // Trait manager configuration
+    traitManager: {
+        appendTo: '#traits-container'
     },
 
     // Device manager for responsive preview
@@ -162,11 +58,11 @@ const editor = grapesjs.init({
     }
 });
 
+// Initialize modules
+STYLE_MANAGER.init(editor);
+
 // Global editor
 window.editor = editor;
-
-// ===== TEMPLATE LIBRARY =====
-// Template library is now loaded from templates-data.js
 
 // Initial template loading - Wait for editor to be ready
 const loadInitialTemplate = () => {
@@ -186,7 +82,6 @@ const loadInitialTemplate = () => {
         console.error('Safe Load error:', err);
     }
 };
-
 
 // Width Control Logic
 function bindWidthControl() {
@@ -282,6 +177,7 @@ if (editor.getModel().get('is_loaded')) {
 } else {
     editor.on('load', loadInitialTemplate);
 }
+
 // ===== EMAIL SIZE CALCULATOR =====
 const sizeIndicator = document.getElementById('sizeIndicator');
 const sizeValue = document.getElementById('sizeValue');
@@ -337,16 +233,15 @@ setTimeout(updateEmailSize, 1000);
 document.getElementById('btnNew').addEventListener('click', () => {
     const content = `
         <div style="text-align: center; padding: 20px;">
-            <p style="margin-bottom: 20px; font-size: 16px;">Â¿EstÃ¡s seguro de que quieres empezar un nuevo diseÃ±o?</p>
-            <p style="color: var(--text-secondary); font-size: 14px;">Se perderÃ¡n todos los cambios que no hayas guardado como plantilla.</p>
+            <p style="margin-bottom: 20px; font-size: 16px;">¿Estás seguro de que quieres empezar un nuevo diseño?</p>
+            <p style="color: var(--text-secondary); font-size: 14px;">Se perderán todos los cambios que no hayas guardado como plantilla.</p>
         </div>
     `;
 
-    showModal('Nuevo DiseÃ±o', content, [
+    showModal('Nuevo Diseño', content, [
         { text: 'Cancelar', primary: false, action: hideModal },
         {
             text: 'Empezar de cero', primary: true, class: 'btn-danger', action: () => {
-                // Basic MJML structure to start with
                 const emptyTemplate = `
 <mjml>
   <mj-head>
@@ -354,17 +249,17 @@ document.getElementById('btnNew').addEventListener('click', () => {
       <mj-all font-family="'Segoe UI', Inter, Arial, sans-serif" />
     </mj-attributes>
   </mj-head>
-  <mj-body width="640px">
+  <mj-body width="600px">
     <mj-section>
       <mj-column>
-        <mj-text align="center">Empieza a diseÃ±ar tu email aquÃ­...</mj-text>
+        <mj-text align="center">Empieza a diseñar tu email aquí...</mj-text>
       </mj-column>
     </mj-section>
   </mj-body>
 </mjml>`;
                 editor.setComponents(emptyTemplate);
                 hideModal();
-                showToast('Nuevo diseÃ±o iniciado');
+                showToast('Nuevo diseño iniciado');
                 updateEmailSize();
             }
         }
@@ -378,46 +273,9 @@ document.getElementById('btnImportHtml').addEventListener('click', () => {
 
 window.loadHtmlContent = (html, sourceName) => IMPORT_EXPORT.loadHtmlContent(html, sourceName);
 
-// ===== DEVICE PREVIEW BUTTONS & UNDO/REDO (handled by preview-controls.js) =====
-
-// Tabs handled by ui-manager.js
-
-// Modals handled by ui-manager.js
-
 // ===== EDITOR EVENTS =====
 editor.on('load', () => {
     console.log('Visual Email Editor loaded');
-
-    // Add Horizontal Align sector to StyleManager
-    const sm = editor.StyleManager;
-    sm.addSector('alignment', {
-        name: 'Alignment',
-        open: true,
-        properties: [
-            {
-                type: 'select',
-                property: 'margin',
-                name: 'Horizontal Align',
-                defaults: '0',
-                options: [
-                    { value: '0', name: 'Left' },
-                    { value: '0 auto', name: 'Center' },
-                    { value: '0 0 0 auto', name: 'Right' }
-                ]
-            },
-            {
-                type: 'select',
-                property: 'text-align',
-                name: 'Text Align',
-                defaults: 'left',
-                options: [
-                    { value: 'left', name: 'Left' },
-                    { value: 'center', name: 'Center' },
-                    { value: 'right', name: 'Right' }
-                ]
-            }
-        ]
-    }, { at: 0 }); // Add at the top
 });
 
 editor.on('component:selected', () => {
@@ -426,53 +284,9 @@ editor.on('component:selected', () => {
     if (stylesTab) stylesTab.click();
 });
 
-// Limit width to 640px max for MJML components
-const MAX_WIDTH = 2000; // Increased limit to allow wider designs
-editor.on('component:update', (component) => {
-    if (!component) return;
-
-    const type = component.get('type') || '';
-    if (type.startsWith('mj-') || type === 'image') {
-        // Check style width
-        const style = component.getStyle();
-        if (style.width) {
-            const widthValue = parseInt(style.width);
-            if (widthValue > MAX_WIDTH) {
-                component.addStyle({ width: MAX_WIDTH + 'px' });
-                console.log(`Width limited to ${MAX_WIDTH}px for ${type}`);
-            }
-        }
-
-        // Check attribute width
-        const attrs = component.getAttributes();
-        if (attrs.width) {
-            const widthValue = parseInt(attrs.width);
-            if (widthValue > MAX_WIDTH) {
-                component.addAttributes({ width: MAX_WIDTH + 'px' });
-                console.log(`Attribute width limited to ${MAX_WIDTH}px for ${type}`);
-            }
-        }
-    }
-});
-
-// ===== AI INTEGRATION (handled by ai-handlers.js) =====
-
-// ===== TEMPLATE LIBRARY UI (handled by template-ui.js) =====
-
-// ===== AI DESIGN CHAT (handled by ai-handlers.js) =====
-
-// UI Manager (Resizing) extracted to ui-manager.js
-
 // ===== INITIALIZE =====
 PREVIEW_CONTROLS.init();
 TEMPLATE_UI.init();
 AI_HANDLERS.init();
 EDITOR_ACTIONS.init();
 console.log('Visual Email Editor initialized');
-
-
-
-
-
-
-

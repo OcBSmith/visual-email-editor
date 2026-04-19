@@ -168,20 +168,21 @@ async function insertHtmlToCompose(html) {
 
       if (hasSignature) {
         console.log("Signature detected, preserving it");
-        // Insert our HTML before the signature
+        // Prepend our design (which now includes styles and container) before the signature
         if (existingBody.includes('<body')) {
-          // Insert after <body> tag
+          // Insert after <body> tag of the existing compose window
           finalBody = existingBody.replace(/(<body[^>]*>)/i, `$1${processedHtml}<br><br>`);
         } else {
-          // Prepend our content before the signature
+          // Simple string concat if no body tag found
           finalBody = processedHtml + '<br><br>' + existingBody;
         }
       } else {
         console.log("No signature detected");
+        finalBody = processedHtml;
       }
     }
 
-    // Step 6: Set the body with CID references
+    // Step 6: Set the body
     await browser.compose.setComposeDetails(tab.id, {
       body: finalBody
     });

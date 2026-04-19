@@ -29,10 +29,94 @@ const IMPORT_EXPORT = {
     },
 
     async getCompiledHtml() {
-        if (!window.editor) {
-            throw new Error('Editor not initialized');
+        if (!window.editor) throw new Error('Editor not initialized');
+        
+        try {
+            console.log('[COMPILACIÓN V5] Iniciando proceso de curación y exportación...');
+            
+            // 1. EL GRAN SANADOR (The Great Healer)
+            // Las pruebas de alineación anteriores corruptieron el estado almacenado 
+            // con atributos inválidos (como text-align en mj-text) haciendo que el 
+            // parser interno de MJML explote ("Parsing failed").
+            const healComponent = (comp) => {
+                const attrs = { ...comp.getAttributes() };
+                let modifiedAttrs = false;
+                
+                const type = comp.get('type');
+                
+                // Mj-text y Mj-button NO soportan text-align nativo, sólo align.
+                if (type === 'mj-text' || type === 'mj-button' || type === 'mj-image') {
+                    if (attrs['text-align']) {
+                        delete attrs['text-align'];
+                        modifiedAttrs = true;
+                    }
+                }
+                
+                if (modifiedAttrs) {
+                    comp.set('attributes', attrs);
+                }
+                
+                // Limpiar ETIQUETAS Y ESTILOS DE CSS CATASTRÓFICOS (como 'align' en css, que MJML odia)
+                const style = comp.getStyle();
+                if (style && style['align']) {
+                    comp.removeStyle('align');
+                }
+
+                // Recursión para los hijos
+                const components = comp.components();
+                if (components && components.length) {
+                    components.forEach(healComponent);
+                }
+            };
+            
+            // Curar todo el documento antes de compilar
+            healComponent(window.editor.getWrapper());
+            
+            // 2. Ejecutar compilación usando SIEMPRE mjml-code-to-html (el comando que sabemos que existe)
+            // Pasamos validación saltada por si acaso queda algo mal
+            let result = window.editor.runCommand('mjml-code-to-html', { validationLevel: 'skip' });
+            
+            let fullHtml = "";
+            if (result) {
+                fullHtml = result.html || (typeof result === 'string' ? result : "");
+            }
+
+            // 3. Si falló mjml-code-to-html con parsing failed, la librería no lo devuelve, 
+            // así que tenemos que comprobar que de verdad hemos obtenido HTML
+            if (fullHtml && fullHtml.length > 50 && fullHtml.includes('<html')) {
+                console.log(`[COMPILACIÓN V5] Éxito con comando mjml-code-to-html`);
+                
+                // Limpieza agresiva de MSO y basura de Outlook para Thunderbird
+                fullHtml = fullHtml.replace(/<!--\[if[^\]]*\]>[\s\S]*?<!\[endif\]-->/gi, '');
+                fullHtml = fullHtml.replace(/mso-[^:;]+:[^;]+;?/gi, '');
+
+                let bodyContent = '';
+                const bodyMatch = fullHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+                bodyContent = bodyMatch ? bodyMatch[1].trim() : fullHtml;
+
+                let styles = '';
+                const styleMatches = fullHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
+                if (styleMatches) styles = styleMatches.join('\n');
+
+                return `${styles}\n<div class="visual-editor-container" style="max-width:640px;margin:0 auto;">${bodyContent}</div>`;
+            }
+
+            throw new Error('Comando terminó pero no devolvió un HTML válido.');
+        } catch (e) {
+            console.warn('[BLOQUEO V5] Falló compilación profesional, usando súper-limpieza manual de emergencia...', e);
+            
+            // Si GrapesJS falla por completo en darnos el HTML compilado, sacamos la versión pura serializada
+            // y limpiamos TODAS las etiquetas MJML para que Thunderbird no las vea
+            let rawMjml = window.editor.getHtml();
+            if(!rawMjml || rawMjml.length < 10) rawMjml = "<div>El diseño no se pudo exportar correctamente.</div>";
+            
+            return rawMjml.replace(/<mj-text[^>]*>/gi, '<div style="margin-bottom:10px; font-family: sans-serif;">')
+                          .replace(/<mj-section[^>]*>/gi, '<div style="width: 100%; display: table;">')
+                          .replace(/<mj-column[^>]*>/gi, '<div style="display: table-cell; vertical-align: top;">')
+                          .replace(/<mj-[^>]*>/gi, '<div>')
+                          .replace(/<\/mj-[^>]*>/gi, '</div>')
+                          .replace(/<mjml>|<\/mjml>|<mj-head>|<\/mj-head>|<mj-body>|<\/mj-body>/gi, '');
         }
-        return window.editor.getHtml();
     },
 
     async getMjml() {

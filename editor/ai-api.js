@@ -69,11 +69,12 @@ const AI_API = {
             if (saved.groqModel) this.groqModel = saved.groqModel;
             if (saved.openrouterApiKey) this.openrouterApiKey = saved.openrouterApiKey;
             if (saved.openrouterModel) this.openrouterModel = saved.openrouterModel;
+            if (saved.detectedOpenRouterModels) this.detectedOpenRouterModels = saved.detectedOpenRouterModels;
             if (saved.lmStudioUrl) this.lmStudioUrl = saved.lmStudioUrl;
             if (saved.lmStudioModel) this.lmStudioModel = saved.lmStudioModel;
+            if (saved.LM_STUDIO_MODELS) this.LM_STUDIO_MODELS = saved.LM_STUDIO_MODELS;
             
-            // Initial model fetch
-            this.fetchModels().catch(() => {});
+            console.log('[AI API] Configuration restored');
         } catch (e) {
             console.error('[AI API] Init error:', e);
         }
@@ -93,6 +94,7 @@ const AI_API = {
 
     get currentModelName() {
         const modelId = this.currentModel;
+        if (!modelId) return 'Ninguno';
         return modelId.split('/').pop(); // Simple name
     },
 
@@ -110,8 +112,10 @@ const AI_API = {
             groqModel: this.groqModel,
             openrouterApiKey: this.openrouterApiKey,
             openrouterModel: this.openrouterModel,
+            detectedOpenRouterModels: this.detectedOpenRouterModels,
             lmStudioUrl: this.lmStudioUrl,
-            lmStudioModel: this.lmStudioModel
+            lmStudioModel: this.lmStudioModel,
+            LM_STUDIO_MODELS: this.LM_STUDIO_MODELS
         });
         await this.fetchModels();
     },
@@ -170,28 +174,34 @@ const AI_API = {
         ]);
     },
 
-    async generateSubjectLines(text) {
+    async analyzeSpam(text) {
         const res = await this.complete([
-            { role: "system", content: "Suggest 5 subject lines." },
-            { role: "user", content: `Email: ${text}` }
-        ]);
-        return res.split('\n').filter(l => l.trim().length > 5).slice(0, 5);
-    },
-
-    async checkSpamTriggers(text) {
-        const res = await this.complete([
-            { role: "system", content: "Analyze for spam. Output JSON: [{\"trigger\": \"...\", \"why\": \"...\", \"fix\": \"...\"}]" },
+            { 
+                role: "system", 
+                content: `Analyze the following email for spam triggers. 
+                Return ONLY a JSON object with this format:
+                {
+                  "score": 0-10,
+                  "level": "safe"|"warning"|"danger",
+                  "summary": "Brief summary",
+                  "triggers": [{"issue": "...", "fix": "...", "severity": "low"|"medium"|"high"}]
+                }` 
+            },
             { role: "user", content: `Content: ${text}` }
         ]);
-        try { return JSON.parse(res.substring(res.indexOf('['), res.lastIndexOf(']') + 1)); }
-        catch { return []; }
+        try { 
+            const jsonStr = res.substring(res.indexOf('{'), res.lastIndexOf('}') + 1);
+            return JSON.parse(jsonStr); 
+        }
+        catch (e) { 
+            console.error('[AI API] Spam Parse Error:', e, res);
+            throw new Error('No se pudo procesar el análisis de spam. Reintenta.');
+        }
     },
 
-    async generatePreheader(text, subject = '') {
-        return this.complete([
-            { role: "system", content: "Write a short preheader (max 100 chars)." },
-            { role: "user", content: `Subject: ${subject}\nContent: ${text}` }
-        ], { maxTokens: 100 });
+    // Alias for compatibility with UI handlers
+    async processTextAction(text, action) {
+        return this.improveText(text, action);
     },
 
     async conversationalEdit(prompt, currentMjml) {
@@ -232,12 +242,22 @@ const AI_API = {
         return this.processTextAction(text, 'shorten and summarize');
     },
 
-    async translateText(text, targetLanguage) {
-        return this.processTextAction(text, `translate to ${targetLanguage}`);
-    },
-
-    async rewriteText(text, tone) {
-        return this.processTextAction(text, `rewrite with a ${tone} tone`);
+    async translateEmail(mjml, targetLanguage) {
+        return this.complete([
+            { 
+                role: "system", 
+                content: `You are a high-precision translation engine. 
+                Translate the FOLLOWING MJML EMAIL to ${targetLanguage}.
+                
+                CRITICAL INSTRUCTIONS:
+                1. DO NOT add, remove, or modify ANY structural tags (<mj-section>, <mj-column>, <mj-image>, <mj-button>, etc.).
+                2. DO NOT change ANY attributes, CSS, styles, or URLs.
+                3. YOU MUST ONLY translate the human-readable text content inside the tags.
+                4. The final output MUST have exactly the same structure/node count as the input.
+                5. Return ONLY the raw translated MJML code without markdown blocks (\`\`\`).` 
+            },
+            { role: "user", content: mjml }
+        ]);
     },
 
     async generateAltTexts(mjml) {

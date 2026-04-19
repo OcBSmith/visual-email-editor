@@ -52,7 +52,14 @@ const OpenRouterProvider = {
 
         if (!response.ok) {
             const error = await response.json().catch(() => ({}));
-            throw new Error(error.error?.message || `Error OpenRouter (${response.status})`);
+            console.error('[OpenRouter] API Error Detail:', error);
+            
+            if (response.status === 429) {
+                throw new Error('Límite de velocidad alcanzado. Espera un momento o cambia a un modelo diferente.');
+            }
+            
+            const msg = error.error?.message || `Error OpenRouter (${response.status})`;
+            throw new Error(msg);
         }
 
         const data = await response.json();

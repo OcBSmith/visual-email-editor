@@ -3,14 +3,18 @@
 const AI_HANDLERS = {
     chatMessages: null,
     chatInput: null,
+    isProcessing: false,
 
-    init() {
+    async init() {
         this.setupAIButtons();
         this.setupChat();
         
         // Restore missing component events for the "magic" AI icon
         this.bindComponentEvents();
         this.setupRTE();
+        
+        // Wait for AI_API to load from storage
+        await AI_API.init();
         
         // Start periodic health check
         this.updateAIStatus();
@@ -19,17 +23,13 @@ const AI_HANDLERS = {
 
     setupAIButtons() {
         const btnAIGenerate = document.getElementById('btnAIGenerate');
-        const btnAISubject = document.getElementById('btnAISubject');
         const btnAISpam = document.getElementById('btnAISpam');
-        const btnAIPreheader = document.getElementById('btnAIPreheader');
         const btnAITranslateAll = document.getElementById('btnAITranslateAll');
         const btnAIAlt = document.getElementById('btnAIAlt');
         const btnAIConfig = document.getElementById('btnAIConfig');
 
         if (btnAIGenerate) btnAIGenerate.addEventListener('click', () => this.showGenerateModal());
-        if (btnAISubject) btnAISubject.addEventListener('click', () => this.showSubjectModal());
         if (btnAISpam) btnAISpam.addEventListener('click', () => this.showSpamModal());
-        if (btnAIPreheader) btnAIPreheader.addEventListener('click', () => this.showPreheaderModal());
         if (btnAITranslateAll) btnAITranslateAll.addEventListener('click', () => this.showTranslateModal());
         if (btnAIAlt) btnAIAlt.addEventListener('click', () => this.showAltTextModal());
         if (btnAIConfig) btnAIConfig.addEventListener('click', () => this.showConfigModal());
@@ -175,12 +175,14 @@ const AI_HANDLERS = {
             <div id="aiActionPreview" class="ai-preview" style="display:none;"></div>
             
             <div class="modal-footer" id="aiActionFooter" style="display:none;">
-                <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button class="btn-secondary" id="aiCancelAction">Cancelar</button>
                 <button class="btn-primary" id="aiApplyAction">Aplicar Cambio</button>
             </div>
         `);
 
         // Bind actions
+        const cancelBtn = document.getElementById('aiCancelAction');
+        if (cancelBtn) cancelBtn.onclick = () => hideModal();
         document.getElementById('aiFixGrammar').onclick = () => this.handleTextAIAction(originalText, 'corregir gramática y ortografía', onApply);
         document.getElementById('aiTranslate').onclick = () => this.handleTextAIAction(originalText, 'traducir al inglés', onApply);
         document.getElementById('aiImprove').onclick = () => this.handleTextAIAction(originalText, 'mejorar el estilo y la fluidez', onApply);
@@ -202,10 +204,12 @@ const AI_HANDLERS = {
     },
 
     async handleTextAIAction(originalText, action, onApply) {
+        if (this.isProcessing) return;
         const preview = document.getElementById('aiActionPreview');
         const footer = document.getElementById('aiActionFooter');
         const applyBtn = document.getElementById('aiApplyAction');
 
+        this.isProcessing = true;
         preview.style.display = 'flex';
         preview.classList.add('loading');
         preview.innerHTML = '<div class="ai-spinner"></div><div style="margin-left:10px">Procesando con IA...</div>';
@@ -222,12 +226,14 @@ const AI_HANDLERS = {
             applyBtn.onclick = () => {
                 onApply(result);
                 showToast('Cambio aplicado');
-                closeModal();
+                hideModal();
             };
         } catch (error) {
             console.error('AI Action error:', error);
             preview.innerHTML = `<div style="color:var(--danger)">Error: ${error.message}</div>`;
             preview.classList.remove('loading');
+        } finally {
+            this.isProcessing = false;
         }
     },
 
@@ -279,7 +285,7 @@ const AI_HANDLERS = {
                 <div class="form-group">
                     <label>Modelo Gratuito</label>
                     <select class="form-input" id="aiOpenRouterModelSelect">
-                        ${AI_API.OPENROUTER_FREE_MODELS.map(m => 
+                        ${[...AI_API.OPENROUTER_FREE_MODELS, ...AI_API.detectedOpenRouterModels.filter(dm => !AI_API.OPENROUTER_FREE_MODELS.find(fm => fm.id === dm.id))].map(m => 
                             `<option value="${m.id}" ${m.id === AI_API.openrouterModel ? 'selected' : ''}>${m.name}</option>`
                         ).join('')}
                     </select>
@@ -312,7 +318,12 @@ const AI_HANDLERS = {
                 <div class="form-group">
                     <label>Model (leave as default if using single model)</label>
                     <select class="form-input" id="aiLmModelSelect">
-                        <option value="${AI_API.lmStudioModel || 'local-model'}">${AI_API.lmStudioModel || 'local-model'}</option>
+                        ${AI_API.LM_STUDIO_MODELS.length > 0 
+                            ? AI_API.LM_STUDIO_MODELS.map(m => 
+                                `<option value="${m.id}" ${m.id === AI_API.lmStudioModel ? 'selected' : ''}>${m.id}</option>`
+                              ).join('')
+                            : `<option value="${AI_API.lmStudioModel || 'local-model'}" selected>${AI_API.lmStudioModel || 'local-model'}</option>`
+                        }
                     </select>
                 </div>
             </div>
@@ -347,8 +358,8 @@ const AI_HANDLERS = {
                 document.getElementById('openrouterSettings').style.display = newProvider === 'openrouter' ? 'block' : 'none';
                 lmStudioSettings.style.display = newProvider === 'lmstudio' ? 'block' : 'none';
                 
-                // Auto-save provider change
-                await this.saveAIConfig();
+                // Auto-save provider change (SILENT)
+                await this.saveAIConfig(true);
             });
         }
 
@@ -425,7 +436,7 @@ const AI_HANDLERS = {
                 if (orKeyInput.value.trim().startsWith('sk-or-')) {
                     refreshBtn?.click();
                 }
-                await this.saveAIConfig();
+                await this.saveAIConfig(true);
             });
         }
 
@@ -436,18 +447,18 @@ const AI_HANDLERS = {
                 if (apiKeyInput.value.trim().startsWith('gsk_')) {
                     refreshBtn?.click();
                 }
-                await this.saveAIConfig();
+                await this.saveAIConfig(true);
             });
         }
 
-        // Also save when models are manually selected
-        document.getElementById('aiModelSelect')?.addEventListener('change', () => this.saveAIConfig());
-        document.getElementById('aiOpenRouterModelSelect')?.addEventListener('change', () => this.saveAIConfig());
-        document.getElementById('aiLmModelSelect')?.addEventListener('change', () => this.saveAIConfig());
-        lmUrlInput?.addEventListener('blur', () => this.saveAIConfig());
+        // Also save when models are manually selected (SILENT)
+        document.getElementById('aiModelSelect')?.addEventListener('change', () => this.saveAIConfig(true));
+        document.getElementById('aiOpenRouterModelSelect')?.addEventListener('change', () => this.saveAIConfig(true));
+        document.getElementById('aiLmModelSelect')?.addEventListener('change', () => this.saveAIConfig(true));
+        lmUrlInput?.addEventListener('blur', () => this.saveAIConfig(true));
     },
 
-    async saveAIConfig() {
+    async saveAIConfig(silent = false) {
         const provider = document.getElementById('aiProviderSelect')?.value;
         const groqApiKey = document.getElementById('aiApiKeyInput')?.value;
         const groqModel = document.getElementById('aiModelSelect')?.value;
@@ -466,8 +477,10 @@ const AI_HANDLERS = {
             lmStudioModel
         });
 
-        showToast('AI configuration saved', 'success');
-        hideModal();
+        if (!silent) {
+            showToast('AI configuration saved', 'success');
+            hideModal();
+        }
         await this.updateAIStatus();
     },
 
@@ -604,52 +617,7 @@ const AI_HANDLERS = {
         }
     },
 
-    showSubjectModal() {
-        if (!AI_SERVICE.isConfigured()) {
-            showToast('Please configure your AI API Key first', 'warning');
-            document.getElementById('btnAIConfig')?.click();
-            return;
-        }
 
-        showModal('Generate Subject Lines', `
-            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">
-                The AI will analyze your email and suggest 5 subject lines with different psychological approaches.
-            </p>
-            <div class="ai-preview loading" id="subjectLinesContainer">
-                <div class="ai-spinner"></div>
-            </div>
-        `, [
-            { text: 'Close', class: 'btn-secondary', action: hideModal }
-        ]);
-
-        setTimeout(async () => {
-            const container = document.getElementById('subjectLinesContainer');
-            try {
-                const emailText = await this.getEmailTextForAI();
-                const subjects = await AI_SERVICE.generateSubjectLines(emailText);
-
-                const labels = ['Curiosity', 'Urgency', 'Benefit', 'Question', 'Number'];
-                if (container) {
-                    container.classList.remove('loading');
-                    container.innerHTML = subjects.map((s, i) => `
-                        <div style="display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom: 1px solid var(--border);">
-                            <span style="font-size:11px; color: var(--text-muted); min-width:85px;">${labels[i] || `Option ${i+1}`}</span>
-                            <span style="flex:1; font-size:13px; color: var(--text);">${escapeHtml(s)}</span>
-                            <button onclick="navigator.clipboard.writeText(${JSON.stringify(s)}).then(() => showToast('Copied!', 'success'))"
-                                style="background: var(--surface); border: 1px solid var(--border); border-radius:6px; padding:4px 10px; color: var(--text-secondary); cursor:pointer; font-size:11px; white-space:nowrap;">
-                                Copy
-                            </button>
-                        </div>
-                    `).join('');
-                }
-            } catch (err) {
-                if (container) {
-                    container.classList.remove('loading');
-                    container.innerHTML = `<span style="color: var(--danger);">Error: ${err.message}</span>`;
-                }
-            }
-        }, 50);
-    },
 
     showSpamModal() {
         if (!AI_SERVICE.isConfigured()) {
@@ -711,69 +679,7 @@ const AI_HANDLERS = {
         }, 50);
     },
 
-    showPreheaderModal() {
-        if (!AI_SERVICE.isConfigured()) {
-            showToast('Please configure your AI API Key first', 'warning');
-            document.getElementById('btnAIConfig')?.click();
-            return;
-        }
 
-        showModal('Generate Preheader Text', `
-            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">
-                The preheader is the preview text shown in email clients after the subject line.
-            </p>
-            <div class="ai-preview loading" id="preheaderContainer">
-                <div class="ai-spinner"></div>
-            </div>
-            <div id="preheaderOutput" style="display:none; margin-top:16px;">
-                <div class="form-group">
-                    <label>Generated Preheader</label>
-                    <input type="text" class="form-input" id="preheaderText" style="font-size:14px;" />
-                    <div id="preheaderCharCount" style="font-size:11px; color: var(--text-muted); margin-top:4px; text-align:right;"></div>
-                </div>
-            </div>
-        `, [
-            { text: 'Cancel', class: 'btn-secondary', action: hideModal },
-            {
-                text: 'Copy Preheader', class: 'btn-primary', id: 'btnCopyPreheader', style: 'display:none', action: () => {
-                    const text = document.getElementById('preheaderText')?.value;
-                    if (text) navigator.clipboard.writeText(text).then(() => showToast('Preheader copied!', 'success'));
-                }
-            }
-        ]);
-
-        setTimeout(async () => {
-            const container = document.getElementById('preheaderContainer');
-            const output = document.getElementById('preheaderOutput');
-            const input = document.getElementById('preheaderText');
-            const charCount = document.getElementById('preheaderCharCount');
-            const copyBtn = document.getElementById('btnCopyPreheader');
-
-            try {
-                const emailText = await this.getEmailTextForAI();
-                const preheader = await AI_SERVICE.generatePreheader(emailText);
-
-                if (container) container.style.display = 'none';
-                if (output) output.style.display = 'block';
-                if (input) {
-                    input.value = preheader;
-                    input.addEventListener('input', () => {
-                        if (charCount) {
-                            charCount.textContent = `${input.value.length}/90 characters`;
-                            charCount.style.color = input.value.length > 90 ? 'var(--danger)' : 'var(--text-muted)';
-                        }
-                    });
-                    input.dispatchEvent(new Event('input'));
-                }
-                if (copyBtn) copyBtn.style.display = 'block';
-            } catch (err) {
-                if (container) {
-                    container.classList.remove('loading');
-                    container.innerHTML = `<span style="color: var(--danger);">Error: ${err.message}</span>`;
-                }
-            }
-        }, 50);
-    },
 
     showTranslateModal() {
         if (!AI_SERVICE.isConfigured()) {
@@ -830,12 +736,15 @@ const AI_HANDLERS = {
         if (btn) btn.disabled = true;
 
         try {
-            const mjml = await IMPORT_EXPORT.getCompiledHtml();
-            const translatedMjml = await AI_SERVICE.translateEmail(mjml, lang);
+            // CRÍTICO: Debemos pasar el código MJML puro (getHtml de GrapesJS en este plugin), 
+            // no el getCompiledHtml() porque si el bot devuelve HTML estándar en lugar de MJML, 
+            // rompe toda la estructura del editor.
+            const mjmlToTranslate = window.editor.getHtml();
+            const translatedMjml = await AI_SERVICE.translateEmail(mjmlToTranslate, lang);
 
             window.editor.DomComponents.clear();
             window.editor.setComponents(translatedMjml);
-            showToast(`Email translated to ${lang}`, 'success');
+            showToast(`Email traducido al ${lang}`, 'success');
             hideModal();
         } catch (err) {
             if (container) {
@@ -919,6 +828,7 @@ const AI_HANDLERS = {
     },
 
     async handleChatSend() {
+        if (this.isProcessing) return;
         const text = this.chatInput?.value.trim();
         if (!text) return;
 
@@ -927,6 +837,7 @@ const AI_HANDLERS = {
             return;
         }
 
+        this.isProcessing = true;
         this.chatInput.value = '';
         this.addChatMessage('user', text);
         
@@ -946,6 +857,8 @@ const AI_HANDLERS = {
             if (loadingMsg) {
                 loadingMsg.innerHTML = `<span style="color: var(--danger);">Error: ${err.message}</span>`;
             }
+        } finally {
+            this.isProcessing = false;
         }
     }
 };

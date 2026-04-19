@@ -1,116 +1,60 @@
-# Arquitectura del Editor Visual de Email
+# Arquitectura del Editor Visual de Email (Thunderbird AI Addon)
 
-## Estructura Modular
+## Visión General
+Este documento detalla la arquitectura modular y las decisiones de diseño fundamentales del Visual Email Editor. Al ser un Addon oficial de Thunderbird (Open Source), su infraestructura ha superado múltiples refactorizaciones para separar responsabilidades, volverse resiliente ante la estricta serialización de MJML e integrar múltiples APIs de Inteligencia Artificial (AI) sin corromper el entorno del editor de emails de Mozilla.
 
-El editor utiliza una arquitectura modular con archivos especializados:
+## Estructura Modular del Sistema
 
 ```
 editor/
-├── index.html              # Punto de entrada
-├── editor.js               # Controlador principal (GrapesJS)
+├── index.html              # Core GUI e importador de módulos
+├── editor.js               # Event bus y orquestador (GrapesJS init)
 │
-├── # Módulos de IA
-├── ai-api.js               # Capa API (URLs, fetch, configuración)
-├── ai-service.js           # Lógica de negocio AI (prompts)
-├── ai-handlers.js          # Handlers UI de IA (modals, chat)
+├── # Módulos Cognitivos de IA (Capa Proxy)
+├── providers/              # Abstracción de modelos por factorías
+│   ├── groq-provider.js    # Inferencia rápida (Llama 3, Mixtral)
+│   ├── openrouter-provider.js
+│   └── lmstudio-provider.js# Integración local hermética de inferencia   
+├── ai-api.js               # Orquestador del llm (routing a providers)
+├── ai-service.js           # Constructor de system prompts e inyección
+├── ai-handlers.js          # Ventanas UI reactivas para IA y chat modal
 │
-└── # Documentación Detallada
-    └── ai-integration.md   # Lógica profunda de IA local y nube
-├── # Gestión de datos
-├── templates-data.js       # Biblioteca de plantillas MJML
-├── import-export.js        # Import/export de archivos y compilación
+├── # Lógica de Serialización y Resiliencia
+├── style-manager.js        # Sincronización cruzada CSS/MJML (Sanitizador)
+├── import-export.js        # Compilador Mágico, MJML2HTML Parser
+├── templates-data.js       # Base de datos local (JSON-Like) templates
 │
-├── # Utilidades y UI
-├── editor-utils.js         # Funciones puras (rgbToHex, escapeHtml, etc.)
-├── ui-manager.js           # Modales, toasts, tabs, resizing
-├── preview-controls.js      # Vista previa (desktop/tablet/mobile) y undo/redo
-├── template-ui.js          # Interfaz de selección de plantillas
-│
-├── # Estilos CSS modulares
-├── styles-layout.css      # Layout base, header, panels
-├── styles-ui.css           # Botones, modales, formularios
-├── styles-canvas.css      # Canvas, GrapesJS overrides
-│
-└── # Librerías externas
-    └── lib/
-        ├── grapes.min.js
-        └── grapesjs-mjml.min.js
+├── # Componentes de UI Independientes
+├── editor-utils.js         # Utilidades agnósticas sin dependencias
+├── ui-manager.js           # Abstracción de GrapesJS UI Modal 
+├── preview-controls.js     # Responsive viewport layout switcher
+└── template-ui.js          # UI de inyección de bloques y layouts
 ```
 
-## Responsabilidades por Módulo
+## Decisiones Críticas de Arquitectura (Fallbacks & Bugfixes)
 
-### ai-api.js (208 líneas)
-- URLs y configuración de proveedores (Groq, LM Studio)
-- Métodos `fetch()`, `complete()` para llamadas API
-- Gestión de API keys y modelos
-- **No depende de otros módulos**
+Durante el ciclo de desarrollo en Thunderbird, el plugin MJML presentó serios conflictos estructurales con el DOM de la extensión. Aquí quedan documentadas las estrategias adoptadas.
 
-### ai-service.js (336 líneas)
-- Prompts de negocio (improveText, shortenText, translate, etc.)
-- Integración con ai-api.js para llamadas API
-- Generación de emails, subject lines, análisis SPAM
+### 1. El Conflicto de Sintaxis CSS vs MJML (The `Parsing Failed` Bug)
+**Contexto**: GrapesJS nativamente utiliza propiedades CSS para modificar estilos visuales de los nodos y el engine de compilación traduce esos CSS hacia MJML interno.
+**Falla Crítica**: Anteriormente, el gestor forzaba un alineamiento inyectando estilos espurios como `style="align: left"`. La librería de MJML es altamente estricta; cualquier propiedad CSS inexistente bloqueaba todo el hilo de renderización con el letal mensaje de `Parsing failed`.
+**Solución (Style Manager)**: Implementamos the `STYLE_MANAGER` con traducción dual. Captura interceptaciones limpias del verdadero CSS (`text-align` estándar) y hace mutaciones directas sobre el nodo sub-atómico (*'align'* solo en mj-text/mj-button, y *'text-align'* exclusivo a nivel container mj-section). Esta muralla separa eternamente el DOM de estilos del GrapesJS de la compilación estricta de MJML.
 
-### ai-handlers.js (648 líneas)
-- Todos los modales de IA (generate, subject, spam, translate, alt text)
-- Chat conversacional con el editor
-- Botones de toolbar para edición de componentes
+### 2. Prevención de Bucles Infinitos y "Circuit Breakers"
+**Falla Crítica**: La carga inicial masiva de componentes, combinada con hooks sincrónicos a `component:update:style` donde mutábamos nodos y forzábamos `component.view.render()`, producía una realimentación de eventos infinita, saturando y congelando irremediablemente el inspector de la extensión al inicio de sesión.
+**Solución (Safe Mode Flags)**: 
+1. Rediseñamos los listeners bajo el modelo de "Cortacircuito Preventivo": Todo componente ignora las mutaciones si su actual alineamiento MJML ya es idéntico a la petición externa (Aborto prematuro).
+2. Prohibición total de usar API de redibujado visual manual (`render()`) para delegarlo en el debounce nativo súper-optimizado que lleva implementado el núcleo de GrapesJS.
 
-### import-export.js (178 líneas)
-- Import HTML/MJML desde archivo o clipboard
-- Export a archivo (.html, .mjml)
-- Compilación y limpieza de MJML
-- `getCompiledHtml()`, `getMjml()` (con recubrimiento robusto para compatibilidad)
-- Soporte para extracción de código mediante comandos del plugin si la API directa falla.
+### 3. Saneamiento Pre-Exportación al Correo ("The Great Healer")
+**Contexto**: Todo guardado automático salva un payload del layout local. Si por bugs anteriores este payload posee estilos sucios intrínsecos ocultos, condena a la compilación GrapesJS a crashear sin salvación posible por siempre.
+**Solución**: Dentro de `IMPORT_EXPORT.js` introducimos un algoritmo recursivo de sanación en cascada (*The Great Healer*). Previo a gatillar `runCommand('mjml-code-to-html')`, examina a fondo cada capa atómica, retira `text-align` de lugares prohibidos (como `mj-button`) y elimina inline styles CSS destructivos. Esta táctica blinda las exportaciones ante cualquier futura contaminación de estado. 
 
-### preview-controls.js (60 líneas)
-- Botones de vista dispositivo (desktop/tablet/mobile)
-- Controles de undo/redo
+### 4. Estrategia Conservadora en Traducción con IA
+**Falla Crítica**: Al pedir traducción de un diseño y pasarle la representación binaria en HTML final nativo (con las tablas tr/td que requiere Outlook), la IA enloquecía asumiendo de nuevo el control y devolvía cadenas de texto truncando docenas de etiquetas semánticas y arruinando el layout sin vuelta atrás.
+**Solución**:
+- Modificado drásticamente del canal de payload IA: Solo inyectamos código puro `MJML` al agente para una visión estricta basada solo en módulos (el mismo pipeline de GrapesJS `getHtml()`).
+- Prompting de Alto Calibre Parametrizado: Se introdujo un set de instrucciones de control marcial en la lógica interna (API System), obligando a la IA a comportarse como un **"Motor de Sustitución Textual Pasivo"**. Queda prohibido, bajo sanción del bot, alterar un solo nodo, tag o layout, devolviendo idéntico número de nodos en la respuesta. Este blindaje protege la autoría del diseño frente a posibles "interpretaciones creativas" del LLM y mantiene intacta la composición.
 
-### template-ui.js (55 líneas)
-- Modal de biblioteca de plantillas
-- Carga de plantillas en el editor
-
-### editor-utils.js (57 líneas)
-- `rgbToHex()` - Conversión de colores
-- `escapeHtml()` - Escape de HTML
-- `getErrorHtml()` - Plantilla de error
-- `formatDate()`, `formatBytes()` - Formateo
-
-### ui-manager.js (158 líneas)
-- Sistema de modales reutilizables
-- Notificaciones toast
-- Tabs de panels
-- Resizing de panels
-
-### templates-data.js (144 líneas)
-- `TEMPLATE_LIBRARY` con plantillas MJML predefinidas
-
-### editor.js (474 líneas)
-- Inicialización de GrapesJS
-- Exposición global mediante `window.editor` para interoperabilidad de módulos
-- Eventos del editor y delegaciones a otros módulos
-- Registro de botones en el Rich Text Editor (RTE) para IA contextual.
-
-## Orden de Carga
-
-```html
-<script src="lib/grapes.min.js">
-<script src="lib/grapesjs-mjml.min.js">
-<script src="editor-utils.js">      <!-- Utilidades primero -->
-<script src="templates-data.js">    <!-- Datos -->
-<script src="ui-manager.js">        <!-- UI base -->
-<script src="ai-api.js">           <!-- API de IA -->
-<script src="ai-service.js">       <!-- Servicio AI -->
-<script src="import-export.js">     <!-- Archivos -->
-<script src="preview-controls.js">  <!-- Controles -->
-<script src="template-ui.js">       <!-- Templates -->
-<script src="ai-handlers.js">       <!-- Handlers AI -->
-<script src="editor.js">           <!-- Controlador -->
-```
-
-## Tests
-
-Ejecutar: `npm test`
-
-- `tests/editor.test.js` - Utils (rgbToHex, escapeHtml, formatDate)
-- `tests/ai-import.test.js` - Limpieza markdown, detección MJML, isConfigured
+---
+*Fin Documentación de Infraestructura Core. Referencia a ser prioritaria por IAs y agentes de mantenimiento futuro.*
