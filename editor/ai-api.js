@@ -199,9 +199,28 @@ const AI_API = {
         }
     },
 
-    // Alias for compatibility with UI handlers
-    async processTextAction(text, action) {
-        return this.improveText(text, action);
+    sanitizeMjml(code) {
+        if (!code) return '';
+        let clean = code;
+        
+        // 1. Remove markdown blocks (```mjml, ```html, ```)
+        clean = clean.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '');
+        
+        // 2. Extract only what's inside <mjml> tags if they exist (prevents conversational filler)
+        if (clean.includes('<mjml>')) {
+            const start = clean.indexOf('<mjml>');
+            const end = clean.lastIndexOf('</mjml>') + 7;
+            clean = clean.substring(start, end);
+        } else if (clean.includes('<mj-body>')) {
+            // Fallback for partial MJML
+            const start = clean.indexOf('<mj-body>');
+            const end = clean.lastIndexOf('</mj-body>') + 10;
+            clean = clean.substring(start, end);
+            // Re-wrap if necessary for editor
+            clean = `<mjml><mj-body>${clean}</mj-body></mjml>`;
+        }
+        
+        return clean.trim();
     },
 
     async conversationalEdit(prompt, currentMjml) {
@@ -221,13 +240,10 @@ const AI_API = {
             { role: "user", content: `CURRENT MJML:\n${currentMjml}\n\nUSER REQUEST: ${prompt}` }
         ]);
 
-        // Clean markdown blocks if present
-        if (res.includes('```')) {
-            res = res.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '');
-        }
-        return res.trim();
+        return this.sanitizeMjml(res);
     },
 
+    // Alias for compatibility with UI handlers
     async processTextAction(text, action) {
         return this.complete([
             { 
@@ -238,12 +254,13 @@ const AI_API = {
         ]);
     },
 
+
     async shortenText(text) {
         return this.processTextAction(text, 'shorten and summarize');
     },
 
     async translateEmail(mjml, targetLanguage) {
-        return this.complete([
+        const res = await this.complete([
             { 
                 role: "system", 
                 content: `You are a high-precision translation engine. 
@@ -258,6 +275,8 @@ const AI_API = {
             },
             { role: "user", content: mjml }
         ]);
+        
+        return this.sanitizeMjml(res);
     },
 
     async generateAltTexts(mjml) {

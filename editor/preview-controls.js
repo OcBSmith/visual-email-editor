@@ -26,6 +26,18 @@ const PREVIEW_CONTROLS = {
     setDevice(device, button) {
         if (!window.editor) return;
         window.editor.setDevice(device);
+        
+        // Update pixel input to match device width
+        const widthInput = document.getElementById('emailWidthInput');
+        if (widthInput) {
+            const devObj = window.editor.Devices.get(device);
+            if (devObj) {
+                const widthVal = devObj.get('width');
+                // Si es escritorio (vacío), ponemos 600. Si tiene valor, lo usamos.
+                widthInput.value = widthVal ? parseInt(widthVal) : 600;
+            }
+        }
+
         document.querySelectorAll('.device-btn').forEach(btn => btn.classList.remove('active'));
         if (button) button.classList.add('active');
         

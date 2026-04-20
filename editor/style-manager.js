@@ -60,7 +60,18 @@ const STYLE_MANAGER = {
                         { type: 'integer', name: 'Font Weight', property: 'font-weight', step: 100, min: 100, max: 900 },
                         { type: 'color', name: 'Color', property: 'color' },
                         { type: 'integer', name: 'Line Height', property: 'line-height' },
-                        { type: 'integer', name: 'Letter Spacing', property: 'letter-spacing' }
+                        { type: 'integer', name: 'Letter Spacing', property: 'letter-spacing' },
+                        {
+                            type: 'radio',
+                            name: 'Decoration',
+                            property: 'text-decoration',
+                            defaults: 'none',
+                            options: [
+                                { value: 'none', title: 'None', className: 'fa fa-times' },
+                                { value: 'underline', title: 'Underline', className: 'fa fa-underline' },
+                                { value: 'line-through', title: 'Strikethrough', className: 'fa fa-strikethrough' }
+                            ]
+                        }
                     ]
                 },
                 {
@@ -77,41 +88,89 @@ const STYLE_MANAGER = {
                             { value: 'double', name: 'Double' }
                         ]},
                         { type: 'integer', name: 'Border Width', property: 'border-width', units: ['px'] },
-                        { type: 'color', name: 'Border Color', property: 'border-color' }
+                        { type: 'color', name: 'Border Color', property: 'border-color' },
+                        { type: 'stack', name: 'Shadow', property: 'box-shadow' }
+                    ]
+                },
+                {
+                    name: 'Flex',
+                    open: false,
+                    properties: [
+                        { type: 'select', name: 'Display', property: 'display', options: [
+                            { value: 'block', name: 'Block' },
+                            { value: 'flex', name: 'Flex' },
+                            { value: 'inline-block', name: 'Inline Block' }
+                        ]},
+                        { type: 'select', name: 'Flex Dir', property: 'flex-direction', options: [
+                            { value: 'row', name: 'Row' },
+                            { value: 'column', name: 'Column' }
+                        ]},
+                        { type: 'select', name: 'Justify', property: 'justify-content', options: [
+                            { value: 'flex-start', name: 'Start' },
+                            { value: 'center', name: 'Center' },
+                            { value: 'flex-end', name: 'End' },
+                            { value: 'space-between', name: 'Between' }
+                        ]},
+                        { type: 'select', name: 'Align Items', property: 'align-items', options: [
+                            { value: 'flex-start', name: 'Start' },
+                            { value: 'center', name: 'Center' },
+                            { value: 'flex-end', name: 'End' }
+                        ]}
                     ]
                 }
             ]
         };
     },
 
+    isSyncing: false,
+
     init(editor) {
         console.log('[Style Manager] Initializing sync listeners...');
 
-        // 1. Sincronizar estilo CSS (text-align) al atributo MJML (align)
+        // 1. Sincronizar propiedades de estilo a atributos MJML
         editor.on('style:property:update', (prop) => {
-            const propertyId = prop.get('property');
-            if (propertyId === 'text-align') {
-                this.applyAlignment(editor, prop.get('value'), propertyId);
+            if (this.isSyncing) return;
+            
+            // GrapesJS puede devolver un modelo o un objeto plano
+            const propertyId = prop.getId ? prop.getId() : (prop.property || prop.id);
+            const value = prop.getValue ? prop.getValue() : (prop.value);
+            
+            if (!propertyId) return;
+
+            const mjmlMap = {
+                'text-align': 'align',
+                'background-color': 'background-color',
+                'color': 'color',
+                'font-size': 'font-size',
+                'padding': 'padding',
+                'width': 'width',
+                'height': 'height'
+            };
+
+            if (mjmlMap[propertyId]) {
+                this.isSyncing = true;
+                const attrName = mjmlMap[propertyId];
+                this.applyMjmlAttribute(editor, value, attrName);
+                this.isSyncing = false;
             }
         });
 
-        // 2. Fallback: Atrapar cualquier cambio de estilo
+        // 2. Especial para alineación (que a veces se resiste)
         editor.on('component:update:style', (component) => {
+            if (this.isSyncing) return;
             const style = component.getStyle();
             if (style['text-align']) {
-                const alignVal = style['text-align'];
-                if (alignVal) {
-                    this.applyAlignment(editor, alignVal, 'text-align', component);
-                }
+                this.isSyncing = true;
+                this.applyMjmlAttribute(editor, style['text-align'], 'align', component);
+                this.isSyncing = false;
             }
         });
     },
 
     isSyncing: false,
 
-    applyAlignment(editor, value, propertyId, target = null) {
-        if (this.isSyncing) return;
-        if (!value) return;
+    applyMjmlAttribute(editor, value, attrName, target = null) {
+        if (this.isSyncing || !value) return;
         
         const component = target || editor.getSelected();
         if (!component) return;
@@ -121,43 +180,26 @@ const STYLE_MANAGER = {
             const type = component.get('type');
             const attrs = component.getAttributes();
             
-            // === CORTACIRCUITOS PRINCIPAL ===
-            // Si el componente ya tiene la alineación correcta en su estructura (MJML),
-            // no hacemos NADA para evitar cascadas de eventos.
-            let needsUpdate = false;
-            
-            if (type === 'mj-text' || type === 'mj-button' || type === 'mj-image') {
-                if (attrs['align'] !== value) needsUpdate = true;
-            } else if (type === 'mj-section') {
-                if (attrs['text-align'] !== value) needsUpdate = true;
-            } else {
-                if (attrs['align'] !== value) needsUpdate = true;
+            // Si el atributo ya es igual, no hacemos nada (evitar bucles)
+            if (attrs[attrName] === value) return;
+
+            // Manejo especial para secciones que usan 'text-align' en lugar de 'align'
+            let finalAttr = attrName;
+            if (attrName === 'align' && type === 'mj-section') {
+                finalAttr = 'text-align';
             }
 
-            if (!needsUpdate) return; // Romper el ciclo de ejecución
-
-            console.log(`[ALINEACIÓN V6] Aplicando ${value} a ${component.get('type')}`);
-
-            // 1. Forzar Atributo MJML (Mandatorio)
-            if (type === 'mj-text' || type === 'mj-button' || type === 'mj-image') {
-                component.addAttributes({ 'align': value });
-            } else if (type === 'mj-section') {
-                component.addAttributes({ 'text-align': value });
-            } else {
-                component.addAttributes({ 'align': value });
-            }
-
-            // ATENCIÓN: SIN RENDER MANUAL PARA EVITAR BUCLES! GrapesJS se actualiza solo.
+            console.log(`[Style Sync] Sincronizando ${finalAttr}=${value} para ${type}`);
+            component.addAttributes({ [finalAttr]: value });
             
             if (window.updateEmailSize) {
-                // Debounced para no sobrecargar
-                clearTimeout(window._alignSizeTimeout);
-                window._alignSizeTimeout = setTimeout(window.updateEmailSize, 500);
+                clearTimeout(window._syncSizeTimeout);
+                window._syncSizeTimeout = setTimeout(window.updateEmailSize, 300);
             }
         } finally {
             this.isSyncing = false;
         }
-    }
+    },
 };
 
 window.STYLE_MANAGER = STYLE_MANAGER;

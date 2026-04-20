@@ -28,6 +28,37 @@ const IMPORT_EXPORT = {
         });
     },
 
+    healComponent(comp) {
+        const attrs = { ...comp.getAttributes() };
+        let modifiedAttrs = false;
+        
+        const type = comp.get('type');
+        
+        // Mj-text y Mj-button NO soportan text-align nativo, sólo align.
+        if (type === 'mj-text' || type === 'mj-button' || type === 'mj-image') {
+            if (attrs['text-align']) {
+                delete attrs['text-align'];
+                modifiedAttrs = true;
+            }
+        }
+        
+        if (modifiedAttrs) {
+            comp.set('attributes', attrs);
+        }
+        
+        // Limpiar ETIQUETAS Y ESTILOS DE CSS CATASTRÓFICOS (como 'align' en css, que MJML odia)
+        const style = comp.getStyle();
+        if (style && style['align']) {
+            comp.removeStyle('align');
+        }
+
+        // Recursión para los hijos
+        const components = comp.components();
+        if (components && components.length) {
+            components.forEach(c => this.healComponent(c));
+        }
+    },
+
     async getCompiledHtml() {
         if (!window.editor) throw new Error('Editor not initialized');
         
@@ -38,39 +69,7 @@ const IMPORT_EXPORT = {
             // Las pruebas de alineación anteriores corruptieron el estado almacenado 
             // con atributos inválidos (como text-align en mj-text) haciendo que el 
             // parser interno de MJML explote ("Parsing failed").
-            const healComponent = (comp) => {
-                const attrs = { ...comp.getAttributes() };
-                let modifiedAttrs = false;
-                
-                const type = comp.get('type');
-                
-                // Mj-text y Mj-button NO soportan text-align nativo, sólo align.
-                if (type === 'mj-text' || type === 'mj-button' || type === 'mj-image') {
-                    if (attrs['text-align']) {
-                        delete attrs['text-align'];
-                        modifiedAttrs = true;
-                    }
-                }
-                
-                if (modifiedAttrs) {
-                    comp.set('attributes', attrs);
-                }
-                
-                // Limpiar ETIQUETAS Y ESTILOS DE CSS CATASTRÓFICOS (como 'align' en css, que MJML odia)
-                const style = comp.getStyle();
-                if (style && style['align']) {
-                    comp.removeStyle('align');
-                }
-
-                // Recursión para los hijos
-                const components = comp.components();
-                if (components && components.length) {
-                    components.forEach(healComponent);
-                }
-            };
-            
-            // Curar todo el documento antes de compilar
-            healComponent(window.editor.getWrapper());
+            this.healComponent(window.editor.getWrapper());
             
             // 2. Ejecutar compilación usando SIEMPRE mjml-code-to-html (el comando que sabemos que existe)
             // Pasamos validación saltada por si acaso queda algo mal
@@ -103,6 +102,7 @@ const IMPORT_EXPORT = {
 
             throw new Error('Comando terminó pero no devolvió un HTML válido.');
         } catch (e) {
+
             console.warn('[BLOQUEO V5] Falló compilación profesional, usando súper-limpieza manual de emergencia...', e);
             
             // Si GrapesJS falla por completo en darnos el HTML compilado, sacamos la versión pura serializada
@@ -124,25 +124,27 @@ const IMPORT_EXPORT = {
             throw new Error('Editor not initialized');
         }
         
-        // Try direct call (Standard MJML plugin)
+        // 1. Try direct call (Standard MJML plugin adds this to the editor instance)
         if (typeof window.editor.getMjml === 'function') {
             return window.editor.getMjml();
         }
         
-        // Try uppercase variant
+        // 2. Try uppercase variant
         if (typeof window.editor.getMJML === 'function') {
             return window.editor.getMJML();
         }
         
-        // Try plugin command
-        try {
-            const result = window.editor.runCommand('mjml-get-code');
-            if (result) return result;
-        } catch (e) {
-            console.warn('Command mjml-get-code failed', e);
+        // 3. Try plugin command BUT only if it exists (avoids "command not found" warning)
+        if (window.editor.Commands.isActive && window.editor.Commands.has('mjml-get-code')) {
+            try {
+                return window.editor.runCommand('mjml-get-code');
+            } catch (e) {
+                console.warn('Command mjml-get-code failed', e);
+            }
         }
 
-        // If all fails, fall back to getHtml which sometimes returns the MJML in certain plugin versions
+        // 4. Default fallback: getHtml()
+        // In the MJML plugin, getHtml() usually returns the MJML components as a string
         return window.editor.getHtml();
     },
 

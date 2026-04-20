@@ -151,11 +151,6 @@
                         <polyline points="8 6 2 12 8 18" />
                     </svg>
                 </button>
-                <button id="btnFullscreen" class="toolbar-btn" title="Pantalla completa">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
-                    </svg>
-                </button>
             </div>
 
             <div class="separator"></div>
@@ -198,9 +193,9 @@
 
     <!-- Main Editor Area -->
     <main class="editor-main">
-        <aside class="panel panel-left" id="panelBlocks">
+        <aside class="panel panel-left active" id="panelBlocks">
             <div class="panel-header"><span>Bloques</span></div>
-            <div id="blocks" class="blocks-container"></div>
+            <div id="blocks" class="active"></div>
         </aside>
 
         <div class="panel-resizer" id="resizer-left"></div>
@@ -212,11 +207,11 @@
         <div class="panel-resizer" id="resizer-right"></div>
 
         <aside class="panel panel-right">
-            <div class="panel-tabs">
-                <button class="panel-tab active" data-panel="styles">Estilos</button>
-                <button class="panel-tab" data-panel="traits">Propiedades</button>
-                <button class="panel-tab" data-panel="ai-chat">AI Chat ✨</button>
-                <button class="panel-tab" data-panel="layers">Capas</button>
+            <div class="panel-tabs" style="display: flex; width: 100%; border-bottom: 1px solid var(--border); background: var(--surface);">
+                <button class="panel-tab active" data-panel="styles" style="flex: 1; padding: 10px 2px; font-size: 11px; text-align: center;">Estilos</button>
+                <button class="panel-tab" data-panel="traits" style="flex: 1; padding: 10px 2px; font-size: 11px; text-align: center;">Props</button>
+                <button class="panel-tab" data-panel="ai-chat" style="flex: 1; padding: 10px 2px; font-size: 11px; text-align: center;">AI ✨</button>
+                <button class="panel-tab" data-panel="layers" style="flex: 1; padding: 10px 2px; font-size: 11px; text-align: center;">Capas</button>
             </div>
             <div class="panel-content">
                 <div id="styles-container" class="panel-section active"></div>
@@ -282,6 +277,7 @@
     <script src="template-ui.js"></script>
     <script src="ai-handlers.js"></script>
     <script src="editor-actions.js"></script>
+    <script src="custom-blocks.js"></script>
     <script src="editor.js"></script>
 </body>
 

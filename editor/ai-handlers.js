@@ -742,10 +742,13 @@ const AI_HANDLERS = {
             const mjmlToTranslate = window.editor.getHtml();
             const translatedMjml = await AI_SERVICE.translateEmail(mjmlToTranslate, lang);
 
-            window.editor.DomComponents.clear();
-            window.editor.setComponents(translatedMjml);
-            showToast(`Email traducido al ${lang}`, 'success');
-            hideModal();
+            if (translatedMjml && translatedMjml.length > 50) {
+                window.editor.setComponents(translatedMjml);
+                showToast(`Email traducido al ${lang}`, 'success');
+                hideModal();
+            } else {
+                throw new Error('La respuesta de la IA no parece un correo válido.');
+            }
         } catch (err) {
             if (container) {
                 container.classList.remove('loading');

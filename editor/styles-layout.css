@@ -389,6 +389,7 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    transition: width var(--transition-normal), flex var(--transition-normal), transform var(--transition-normal);
 }
 
 .panel-left {
@@ -398,8 +399,105 @@ body {
 .panel-right {
     width: var(--panel-right-width);
     border-right: none;
-    border-left: none;
+    border-left: 1px solid var(--border);
 }
+
+/* ---------------------------------------------------------------- */
+/* BLOCKS MANAGER - DEEP REPAIR (REPLICATING GRAPESJS EXACT LOOK)   */
+/* ---------------------------------------------------------------- */
+
+#blocks {
+    height: calc(100vh - 100px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    background: var(--bg-secondary);
+}
+
+#blocks, 
+.gjs-block-categories, 
+.gjs-categories, 
+.gjs-block-category {
+    width: 100% !important;
+    min-width: 100% !important;
+    display: block; /* SIN !important para que se puedan plegar */
+    box-sizing: border-box !important;
+}
+
+.gjs-blocks-c {
+    display: flex; /* SIN !important para permitir el plegado */
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    padding: 2px !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+}
+
+/* LA TARJETA (THE BLOCK CARD) */
+.gjs-block {
+    /* 2 Columnas: 50% menos los márgenes */
+    width: calc(50% - 4px) !important; 
+    aspect-ratio: 1 / 1 !important; /* Más cuadradas como en la imagen */
+    margin: 2px !important;
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 4px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 10px 5px !important;
+    cursor: grab;
+    transition: all 0.2s ease !important;
+}
+
+.gjs-block:hover {
+    border-color: var(--primary) !important;
+    background: var(--surface-hover) !important;
+    z-index: 10;
+}
+
+/* ICONOS */
+.gjs-block svg, 
+.gjs-block i, 
+.gjs-block img,
+.gjs-block-media {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 28px !important;
+    color: var(--text-muted) !important;
+    fill: var(--text-muted) !important;
+    margin-bottom: 8px !important;
+}
+
+/* TEXTO */
+.gjs-block-label {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: var(--text-muted) !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+    max-width: 100% !important;
+    word-break: break-all !important;
+}
+
+/* ---------------------------------------------------------------- */
+/* === SECCIÓN DE DEPURACIÓN (MODIFICA ESTO A TU GUSTO) ===         */
+/* ---------------------------------------------------------------- */
+/* Cambia estos valores si quieres ver las tarjetas distintas       */
+
+:root {
+    --debug-block-bg: #1e1e2e;      /* Color de fondo de la tarjeta */
+    --debug-block-border: #313244;  /* Color del borde */
+    --debug-block-width: 48%;       /* Ancho (48% = 2 cols, 98% = 1 col) */
+    --debug-icon-size: 30px;        /* Tamaño de los iconos */
+}
+
+/* 
+  SI VES QUE NO OCUPAN TODO EL ANCHO:
+  Aumenta el --debug-block-width: 48.5%
+*/
+
+/* [FIN DEL ARCHIVO] */
 
 /* Panel Resizers */
 .panel-resizer {
@@ -536,4 +634,27 @@ body {
     text-align: center !important;
     min-width: 100% !important;
     width: auto !important;
+}
+
+/* ===== PREVIEW MODE ===== */
+body.preview-mode .panel-left,
+body.preview-mode .panel-right,
+body.preview-mode .panel-resizer {
+    display: none !important;
+}
+
+body.preview-mode .header-bottom {
+    justify-content: center;
+}
+
+body.preview-mode .header-bottom > *:not(.tools-view) {
+    display: none !important;
+}
+
+body.preview-mode .tools-view {
+    display: flex !important;
+}
+
+body.preview-mode .canvas-container {
+    width: 100vw !important;
 }

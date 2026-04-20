@@ -434,3 +434,85 @@
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-muted);
 }
+
+/* ===== GJS ASSET MANAGER OVERRIDE ===== */
+.gjs-am-assets-cont {
+    padding: 12px;
+    background: var(--bg);
+}
+
+.gjs-am-assets {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.gjs-am-asset {
+    width: 100% !important;
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    overflow: hidden;
+    padding: 0 !important;
+    margin: 0 !important;
+    transition: all var(--transition-fast);
+}
+
+.gjs-am-asset:hover {
+    border-color: var(--primary) !important;
+}
+
+.gjs-am-asset-image {
+    width: 100%;
+    height: 80px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.gjs-am-asset-name {
+    padding: 6px 8px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gjs-am-asset-close {
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.gjs-am-asset:hover .gjs-am-asset-close {
+    opacity: 1;
+}
+
+.gjs-am-add-asset {
+    width: 100%;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 8px;
+}
+
+.gjs-am-add-asset input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 6px 10px;
+    font-size: 12px;
+    flex: 1;
+}
+
+.gjs-am-add-asset button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+}

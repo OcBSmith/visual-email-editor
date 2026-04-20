@@ -7,7 +7,6 @@ const EDITOR_ACTIONS = {
         this.bindLoadTemplateButton();
         this.bindPreviewButton();
         this.bindViewCodeButton();
-        this.bindFullscreenButton();
         this.bindInsertEmailButton();
     },
 
@@ -84,12 +83,6 @@ const EDITOR_ACTIONS = {
         }
     },
 
-    bindFullscreenButton() {
-        const btnFullscreen = document.getElementById('btnFullscreen');
-        if (btnFullscreen) {
-            btnFullscreen.addEventListener('click', () => this.toggleFullscreen());
-        }
-    },
 
     bindInsertEmailButton() {
         const btnInsertEmail = document.getElementById('btnInsertEmail');
@@ -100,26 +93,52 @@ const EDITOR_ACTIONS = {
 
     showExportModal() {
         showModal('Export Email', `
-            <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div class="export-options">
                 <div class="form-group">
-                    <label>Export Format</label>
+                    <label>Choose Format</label>
                     <select class="form-input" id="exportFormat">
-                        <option value="html">HTML (Compiled)</option>
-                        <option value="mjml">MJML (Source)</option>
+                        <option value="html">HTML (Recommended for Thunderbird)</option>
+                        <option value="mjml">MJML (For re-editing)</option>
                     </select>
                 </div>
-                <div style="display: flex; gap: 12px; margin-top: 8px;">
-                    <button class="btn-secondary" style="flex:1;" onclick="EDITOR_ACTIONS.downloadFile()">
-                        Download File
+                <div class="export-preview-box">
+                    <p>Format: <span id="exportFormatLabel" style="font-weight:bold; color:var(--primary);">HTML</span></p>
+                    <small style="color:var(--text-muted);">El formato HTML está optimizado para su visualización en clientes de correo.</small>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button class="btn-secondary" style="flex:1;" id="btnDownloadExport">
+                        Descargar Archivo
                     </button>
-                    <button class="btn-secondary" style="flex:1;" onclick="EDITOR_ACTIONS.copyToClipboard()">
-                        Copy to Clipboard
+                    <button class="btn-secondary" style="flex:1;" id="btnCopyExport">
+                        Copiar al Portapapeles
                     </button>
                 </div>
             </div>
         `, [
-            { text: 'Close', primary: false, action: hideModal }
+            { text: 'Cancel', primary: false, action: hideModal }
         ]);
+
+        setTimeout(() => {
+            const formatSelect = document.getElementById('exportFormat');
+            const formatLabel = document.getElementById('exportFormatLabel');
+            const btnDownload = document.getElementById('btnDownloadExport');
+            const btnCopy = document.getElementById('btnCopyExport');
+
+            if (formatSelect) {
+                formatSelect.addEventListener('change', () => {
+                    const format = formatSelect.value;
+                    if (formatLabel) formatLabel.textContent = format.toUpperCase();
+                });
+            }
+
+            if (btnDownload) {
+                btnDownload.addEventListener('click', () => this.downloadFile());
+            }
+
+            if (btnCopy) {
+                btnCopy.addEventListener('click', () => this.copyToClipboard());
+            }
+        }, 50);
     },
 
     async downloadFile() {
@@ -232,17 +251,22 @@ const EDITOR_ACTIONS = {
     },
 
     togglePreview() {
-        const canvasContainer = document.querySelector('.canvas-container');
-        const btnPreview = document.getElementById('btnPreview');
+        if (!window.editor) return;
         
-        if (canvasContainer) {
-            canvasContainer.classList.toggle('preview-mode');
-            const isPreview = canvasContainer.classList.contains('preview-mode');
-            
-            if (btnPreview) {
-                btnPreview.style.background = isPreview ? 'var(--primary)' : '';
-                btnPreview.style.color = isPreview ? 'white' : '';
-            }
+        const isPreview = window.editor.Commands.isActive('preview');
+        if (isPreview) {
+            window.editor.stopCommand('preview');
+            document.body.classList.remove('preview-mode');
+        } else {
+            window.editor.runCommand('preview');
+            document.body.classList.add('preview-mode');
+        }
+        
+        const btnPreview = document.getElementById('btnPreview');
+        if (btnPreview) {
+            const nowActive = window.editor.Commands.isActive('preview');
+            btnPreview.style.background = nowActive ? 'var(--primary)' : '';
+            btnPreview.style.color = nowActive ? 'white' : '';
         }
     },
 
@@ -250,27 +274,35 @@ const EDITOR_ACTIONS = {
         showModal('Email Code', `
             <div class="form-group">
                 <label>Format</label>
-                <select class="form-input" id="codeFormat" onchange="EDITOR_ACTIONS.updateCodePreview()">
-                    <option value="mjml">MJML</option>
-                    <option value="html">HTML</option>
+                <select class="form-input" id="codeFormat">
+                    <option value="mjml">MJML (GrapesJS Source)</option>
+                    <option value="html">Generated HTML (Final Output)</option>
                 </select>
             </div>
-            <div class="code-preview" id="codePreview" style="max-height: 400px;">
-                <pre id="codeContent">Loading...</pre>
+            <div class="form-group">
+                <textarea id="codeViewArea" class="form-input" rows="18" readonly 
+                          style="font-family: 'Fira Code', monospace; font-size: 11px; white-space: pre; overflow: scroll; background: #1e1e2e; color: #cdd6f4; border: 1px solid #313244;"></textarea>
             </div>
         `, [
-            { text: 'Copy to Clipboard', primary: true, action: () => this.copyCode() },
+            { text: 'Copy to Clipboard', primary: true, action: () => this.copyCodeFromModal() },
             { text: 'Close', primary: false, action: hideModal }
         ]);
 
-        setTimeout(() => this.updateCodePreview(), 50);
+        setTimeout(() => {
+            const formatSelect = document.getElementById('codeFormat');
+            if (formatSelect) {
+                formatSelect.addEventListener('change', () => this.updateCodePreview());
+            }
+            this.updateCodePreview();
+        }, 100);
     },
 
     async updateCodePreview() {
-        const format = document.getElementById('codeFormat')?.value || 'mjml';
-        const codeContent = document.getElementById('codeContent');
-        
-        if (!codeContent) return;
+        const formatSelect = document.getElementById('codeFormat');
+        const codeViewArea = document.getElementById('codeViewArea');
+        if (!codeViewArea) return;
+
+        const format = formatSelect?.value || 'mjml';
 
         try {
             let code;
@@ -279,14 +311,15 @@ const EDITOR_ACTIONS = {
             } else {
                 code = await IMPORT_EXPORT.getCompiledHtml();
             }
-            codeContent.textContent = code;
+            codeViewArea.value = code;
         } catch (e) {
-            codeContent.textContent = 'Error loading code: ' + e.message;
+            codeViewArea.value = 'Error loading code: ' + e.message;
         }
     },
 
-    async copyCode() {
-        const format = document.getElementById('codeFormat')?.value || 'mjml';
+    async copyCodeFromModal() {
+        const formatSelect = document.getElementById('codeFormat');
+        const format = formatSelect?.value || 'mjml';
         
         try {
             if (format === 'mjml') {
@@ -300,15 +333,6 @@ const EDITOR_ACTIONS = {
         }
     },
 
-    toggleFullscreen() {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(() => {
-                showToast('Fullscreen not available', 'error');
-            });
-        } else {
-            document.exitFullscreen();
-        }
-    },
 
     async insertEmail() {
         try {
