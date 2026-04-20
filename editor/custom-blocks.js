@@ -150,6 +150,68 @@ const CUSTOM_BLOCKS = {
             attributes: { class: 'fa fa-info-circle' }
         });
 
+        // --- BLOQUES BÁSICOS MJML ---
+
+        // Acordeón
+        bm.add('mj-accordion', {
+            label: 'Acordeón',
+            category: 'Básico',
+            content: `
+            <mj-accordion>
+                <mj-accordion-element>
+                    <mj-accordion-title>Título de la pregunta</mj-accordion-title>
+                    <mj-accordion-text>Esta es la respuesta detallada que el usuario puede leer al desplegar el acordeón en clientes de correo compatibles.</mj-accordion-text>
+                </mj-accordion-element>
+            </mj-accordion>
+            `,
+            attributes: { class: 'fa fa-list-ul' }
+        });
+
+        // Navbar / Menú
+        bm.add('mj-navbar', {
+            label: 'Menú Navbar',
+            category: 'Básico',
+            content: `
+            <mj-navbar>
+                <mj-navbar-link href="#">Inicio</mj-navbar-link>
+                <mj-navbar-link href="#">Blog</mj-navbar-link>
+                <mj-navbar-link href="#">Tienda</mj-navbar-link>
+                <mj-navbar-link href="#">Contacto</mj-navbar-link>
+            </mj-navbar>
+            `,
+            attributes: { class: 'fa fa-bars' }
+        });
+
+        // Redes Sociales
+        bm.add('mj-social', {
+            label: 'Redes Sociales',
+            category: 'Básico',
+            content: `
+            <mj-social>
+                <mj-social-element name="facebook"></mj-social-element>
+                <mj-social-element name="twitter"></mj-social-element>
+                <mj-social-element name="linkedin"></mj-social-element>
+            </mj-social>
+            `,
+            attributes: { class: 'fa fa-share-alt' }
+        });
+
+        // Espaciador
+        bm.add('mj-spacer', {
+            label: 'Espaciador',
+            category: 'Básico',
+            content: '<mj-spacer height="20px" />',
+            attributes: { class: 'fa fa-arrows-v' }
+        });
+
+        // Divisor
+        bm.add('mj-divider', {
+            label: 'Divisor',
+            category: 'Básico',
+            content: '<mj-divider border-width="1px" border-style="solid" border-color="lightgrey" />',
+            attributes: { class: 'fa fa-minus' }
+        });
+
         console.log('[Custom Blocks] Registrados correctamente');
     }
 };

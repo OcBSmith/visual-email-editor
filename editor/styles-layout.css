@@ -627,6 +627,7 @@ body {
     width: 100% !important;
     height: 100% !important;
     overflow: auto !important;
+    padding-bottom: 100px !important; /* AIRE EXTRA para poder scrollear hasta el final del todo */
 }
 
 .gjs-cv-canvas__frames {

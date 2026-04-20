@@ -97,7 +97,15 @@ const IMPORT_EXPORT = {
                 const styleMatches = fullHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
                 if (styleMatches) styles = styleMatches.join('\n');
 
-                return `${styles}\n<div class="visual-editor-container" style="max-width:640px;margin:0 auto;">${bodyContent}</div>`;
+                // Detectar el ancho real del MJML para el contenedor final
+                const wrapper = window.editor.getWrapper();
+                const mjBody = wrapper.find('mj-body')[0] || wrapper.findType('mj-body')[0];
+                let finalWidth = '600px'; 
+                if (mjBody) {
+                    finalWidth = mjBody.getAttributes().width || '600px';
+                }
+
+                return `${styles}\n<div class="visual-editor-container" style="max-width:${finalWidth};margin:0 auto;">${bodyContent}</div>`;
             }
 
             throw new Error('Comando terminó pero no devolvió un HTML válido.');

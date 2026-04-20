@@ -1,6 +1,8 @@
 // Visual Email Editor - Preview Controls Module (Device Preview & Undo/Redo)
 
 const PREVIEW_CONTROLS = {
+    lastDesktopWidth: 600,
+
     init() {
         this.bindDeviceButtons();
         this.bindUndoRedo();
@@ -30,12 +32,17 @@ const PREVIEW_CONTROLS = {
         // Update pixel input to match device width
         const widthInput = document.getElementById('emailWidthInput');
         if (widthInput) {
-            const devObj = window.editor.Devices.get(device);
-            if (devObj) {
-                const widthVal = devObj.get('width');
-                // Si es escritorio (vacío), ponemos 600. Si tiene valor, lo usamos.
-                widthInput.value = widthVal ? parseInt(widthVal) : 600;
+            if (device === 'Desktop') {
+                widthInput.value = this.lastDesktopWidth;
+            } else {
+                const devObj = window.editor.Devices.get(device);
+                if (devObj) {
+                    const widthVal = devObj.get('width');
+                    widthInput.value = widthVal ? parseInt(widthVal) : 600;
+                }
             }
+            // Disparar el evento para que editor.js se entere y actualice el lienzo al unísono
+            widthInput.dispatchEvent(new Event('input'));
         }
 
         document.querySelectorAll('.device-btn').forEach(btn => btn.classList.remove('active'));

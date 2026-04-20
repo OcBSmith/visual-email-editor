@@ -224,113 +224,86 @@ const initCommands = () => {
     console.log('[Editor] Global commands registered');
 };
 
-// Width Control Logic
+// --- LÓGICA DE CONTROL DE ANCHO Y SCROLL ---
 function bindWidthControl() {
     const widthInput = document.getElementById('emailWidthInput');
     if (!widthInput) return;
 
-    // Remove old listeners to avoid duplicates
-    const newWidthInput = widthInput.cloneNode(true);
-    widthInput.parentNode.replaceChild(newWidthInput, widthInput);
-
     const updateWidth = (e) => {
         const value = parseInt(e.target.value);
         if (!value || value < 320 || value > 1200) return;
-
         const newWidth = value + 'px';
-        const wrapper = editor.getWrapper();
-        let mjBody = wrapper.find('mj-body')[0] || wrapper.findType('mj-body')[0];
 
-        if (mjBody) {
-            // 1. Update MJML Attribute
-            mjBody.addAttributes({ width: newWidth });
-            
-            // 2. Synchronize Canvas Device Width (This is the fix!)
-            if (value <= 480) {
-                editor.setDevice('Mobile');
-            } else if (value <= 992) {
-                editor.setDevice('Tablet');
-            } else {
-                editor.setDevice('Desktop');
-            }
-
-            // 3. Force canvas width adjustment
-            editor.Canvas.setCustomBadgeLabel(`Ancho: ${value}px`);
-            const canvasEl = editor.Canvas.getElement();
-            if (canvasEl) {
-                const frame = canvasEl.querySelector('iframe');
-                if (frame) frame.style.width = newWidth;
-            }
-
-            // 4. Update UI labels and internal styles
-            document.documentElement.style.setProperty('--mjml-width', newWidth);
-            
-            const iframeDoc = editor.Canvas.getDocument();
-            if (iframeDoc) {
-                let styleEl = iframeDoc.getElementById('custom-mjml-width');
-                if (!styleEl) {
-                    styleEl = iframeDoc.createElement('style');
-                    styleEl.id = 'custom-mjml-width';
-                    iframeDoc.head.appendChild(styleEl);
-                }
-                styleEl.innerHTML = `
-                    .mj-container { max-width: none !important; width: 100% !important; }
-                    .mj-container > div { max-width: ${newWidth} !important; margin: 0 auto !important; }
-                    body { min-width: auto !important; }
-                `;
-            }
-            
-            updateEmailSize();
+        // 1. Ajuste visual instantáneo del frame
+        const frame = editor.Canvas.getFrameEl();
+        if (frame) {
+            frame.style.width = newWidth;
         }
-    };
 
-    newWidthInput.addEventListener('change', updateWidth);
-    newWidthInput.addEventListener('input', updateWidth);
-}
+        // 2. Actualizar el modelo de MJML
+        const mjBody = editor.getWrapper().findType('mj-body')[0];
+        if (mjBody) {
+            mjBody.addAttributes({ width: newWidth });
+        }
 
-// Watch for any MJML changes to keep UI in sync
-editor.on('component:update:attributes', (component) => {
-    if (component.get('type') === 'mj-body') {
-        syncWidthUI();
-    }
-});
-
-// Sync width UI with editor content
-function syncWidthUI() {
-    const mjBody = editor.getWrapper().find('mj-body')[0];
-    if (mjBody) {
-        const width = mjBody.getAttributes().width || '600px';
-        const cssWidth = width.toString().includes('px') ? width : width + 'px';
-        document.getElementById('emailWidthInput').value = parseInt(width);
-        document.documentElement.style.setProperty('--mjml-width', cssWidth);
-        
-        // Inject invincible internal width override directly into the iframe
-        const iframeDoc = editor.Canvas.getDocument();
-        if (iframeDoc) {
-            let styleEl = iframeDoc.getElementById('custom-mjml-width');
-            if (!styleEl) {
-                styleEl = iframeDoc.createElement('style');
-                styleEl.id = 'custom-mjml-width';
-                iframeDoc.head.appendChild(styleEl);
+        // 3. Inyectar estilos correctores de SCROLL y CENTRADO directamente en el DOM del iframe
+        const doc = editor.Canvas.getDocument();
+        if (doc) {
+            let style = doc.getElementById('gjs-mjml-fix');
+            if (!style) {
+                style = doc.createElement('style');
+                style.id = 'gjs-mjml-fix';
+                doc.head.appendChild(style);
             }
-            styleEl.innerHTML = `
-                .mj-container { max-width: none !important; }
-                .mj-container > div { max-width: ${cssWidth} !important; }
-                body { min-width: ${cssWidth} !important; }
+            style.innerHTML = `
+                body { 
+                    display: flex !important; 
+                    flex-direction: column !important; 
+                    align-items: center !important; 
+                    min-height: 100% !important;
+                    padding-bottom: 150px !important; /* EL FIX DEL SCROLL */
+                }
+                .mj-container { 
+                    width: 100% !important; 
+                    max-width: none !important;
+                }
+                .mj-container > div { 
+                    margin: 0 auto !important; 
+                    max-width: ${newWidth} !important;
+                }
             `;
         }
+        
+        // 4. Actualizar memoria de escritorio
+        if (value > 992 && window.PREVIEW_CONTROLS) {
+            window.PREVIEW_CONTROLS.lastDesktopWidth = value;
+        }
+        
+        document.documentElement.style.setProperty('--mjml-width', newWidth);
+    };
+
+    widthInput.addEventListener('input', updateWidth);
+}
+
+// Escuchar específicamente cuando el frame se carga para inyectar el arreglo de scroll
+editor.on('canvas:frame:load', () => {
+    const widthInput = document.getElementById('emailWidthInput');
+    if (widthInput) widthInput.dispatchEvent(new Event('input'));
+});
+
+// Sincronización inversa (cuando MJML cambia externamente)
+function syncWidthUI() {
+    const mjBody = editor.getWrapper().findType('mj-body')[0];
+    if (mjBody) {
+        const width = mjBody.getAttributes().width || '600px';
+        const widthInput = document.getElementById('emailWidthInput');
+        if (widthInput) {
+            widthInput.value = parseInt(width);
+            widthInput.dispatchEvent(new Event('input'));
+        }
     }
 }
 
-// Run once on start
-bindWidthControl();
-IMPORT_EXPORT.init();
-
-if (editor.getModel().get('is_loaded')) {
-    loadInitialTemplate();
-} else {
-    editor.on('load', loadInitialTemplate);
-}
 
 // ===== EMAIL SIZE CALCULATOR =====
 const sizeIndicator = document.getElementById('sizeIndicator');
@@ -428,40 +401,39 @@ document.getElementById('btnImportHtml').addEventListener('click', () => {
 window.loadHtmlContent = (html, sourceName) => IMPORT_EXPORT.loadHtmlContent(html, sourceName);
 
 // ===== EDITOR EVENTS =====
-// Function to initialize blocks safely
-const initBlocks = () => {
-    if (window.CUSTOM_BLOCKS) {
-        console.log('[Editor] Initializing custom blocks...');
-        CUSTOM_BLOCKS.init(editor);
-    } else {
-        console.warn('[Editor] CUSTOM_BLOCKS not found!');
-    }
+// Final Initialization Logic
+const initFullEditor = () => {
+    console.log('[Editor] Starting secure initialization...');
+    
+    // 1. Blocks & Modules
+    if (window.CUSTOM_BLOCKS) CUSTOM_BLOCKS.init(editor);
+    if (window.IMPORT_EXPORT) IMPORT_EXPORT.init();
+    
+    // 2. UI Controls
+    bindWidthControl();
+    if (window.PREVIEW_CONTROLS) PREVIEW_CONTROLS.init();
+    if (window.TEMPLATE_UI) TEMPLATE_UI.init();
+    if (window.AI_HANDLERS) AI_HANDLERS.init();
+    if (window.EDITOR_ACTIONS) EDITOR_ACTIONS.init();
+    
+    // 3. Settings & Data
+    initKeymaps();
+    initCommands();
+    loadInitialTemplate();
+
+    // 4. Tasks
+    setTimeout(updateEmailSize, 1000);
+    console.log('Visual Email Editor initialized successfully');
 };
 
-// Check if editor is already loaded, otherwise listen
+// Start safely
 if (editor.getModel().get('isLoaded')) {
-    initBlocks();
-    loadInitialTemplate();
+    initFullEditor();
 } else {
-    editor.on('load', () => {
-        console.log('[Editor] Load event fired');
-        initBlocks();
-        loadInitialTemplate();
-    });
+    editor.once('load', initFullEditor);
 }
 
 editor.on('component:selected', () => {
-    // Auto switch to styles panel when component is selected
     const stylesTab = document.querySelector('[data-panel="styles"]');
     if (stylesTab) stylesTab.click();
 });
-
-
-// ===== INITIALIZE =====
-PREVIEW_CONTROLS.init();
-TEMPLATE_UI.init();
-AI_HANDLERS.init();
-EDITOR_ACTIONS.init();
-initKeymaps();
-initCommands();
-console.log('Visual Email Editor initialized');
