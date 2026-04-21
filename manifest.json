@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Visual Email Editor",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "Drag-and-drop visual editor to create responsive HTML emails with integrated AI",
   "author": "Antonio RC",
   "homepage_url": "https://github.com/AntoniRC/visual-email-editor",
@@ -21,9 +21,7 @@
   "permissions": [
     "compose",
     "tabs",
-    "storage",
-    "https://api.groq.com/*",
-    "http://localhost/*"
+    "storage"
   ],
   "background": {
     "scripts": [
