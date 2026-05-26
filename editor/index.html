@@ -109,11 +109,17 @@
                         <line x1="12" y1="3" x2="12" y2="15" />
                     </svg>
                 </button>
-                <button id="btnSaveTemplate" class="toolbar-btn" title="Guardar plantilla">
+                <button id="btnSaveTemplate" class="toolbar-btn" title="Guardar plantilla (Ctrl+S)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
                         <polyline points="17 21 17 13 7 13 7 21" />
                         <polyline points="7 3 7 8 15 8" />
+                    </svg>
+                </button>
+                <button id="btnAutosaveHistory" class="toolbar-btn" title="Historial de versiones automáticas">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
                     </svg>
                 </button>
                 <button id="btnExport" class="toolbar-btn" title="Exportar MJML/HTML">
@@ -128,7 +134,7 @@
                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                     </svg>
                 </button>
-                <button id="btnLibrary" class="toolbar-btn" title="Biblioteca">
+                <button id="btnLibrary" class="toolbar-btn" title="Biblioteca de plantillas">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
@@ -149,6 +155,46 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="16 18 22 12 16 6" />
                         <polyline points="8 6 2 12 8 18" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="tools-group tools-extra">
+                <button id="btnBrandColors" class="toolbar-btn" title="Colores de marca">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="13.5" cy="6.5" r="2.5"/>
+                        <circle cx="17.5" cy="10.5" r="2.5"/>
+                        <circle cx="8.5" cy="7.5" r="2.5"/>
+                        <circle cx="6.5" cy="12.5" r="2.5"/>
+                        <path d="M12 22a7 7 0 1 1 0-14 7 7 0 0 1 0 14z"/>
+                    </svg>
+                </button>
+                <button id="btnVariables" class="toolbar-btn" title="Insertar variable dinámica {{nombre}}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="16 18 22 12 16 6"/>
+                        <polyline points="8 6 2 12 8 18"/>
+                    </svg>
+                </button>
+                <button id="btnSpamRules" class="toolbar-btn" title="Análisis de spam (reglas simples, sin IA)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </button>
+                <button id="btnUTMConfig" class="toolbar-btn" title="Configurar parámetros UTM">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                    </svg>
+                </button>
+                <button id="btnKeyboardShortcuts" class="toolbar-btn" title="Atajos de teclado (?)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
                     </svg>
                 </button>
             </div>
@@ -262,7 +308,11 @@
     <!-- Hidden file input for HTML import -->
     <input type="file" id="htmlFileInput" accept=".html,.htm,.mjml" style="display:none">
 
+    <!-- DEV ONLY: remove this line before building the .xpi -->
+    <script src="browser-polyfill.dev.js"></script>
+
     <script src="lib/grapes.min.js"></script>
+    <script src="config.js"></script>
     <script src="lib/grapesjs-mjml.min.js"></script>
     <script src="editor-utils.js"></script>
     <script src="templates-data.js"></script>
@@ -278,6 +328,11 @@
     <script src="ai-handlers.js"></script>
     <script src="editor-actions.js"></script>
     <script src="custom-blocks.js"></script>
+    <script src="spam-analyzer.js"></script>
+    <script src="utm.js"></script>
+    <script src="variables.js"></script>
+    <script src="brand-colors.js"></script>
+    <script src="autosave.js"></script>
     <script src="editor.js"></script>
 </body>
 

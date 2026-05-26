@@ -15,10 +15,9 @@ const AI_HANDLERS = {
         
         // Wait for AI_API to load from storage
         await AI_API.init();
-        
-        // Start periodic health check
+
+        // One-time health check on init; subsequent checks happen only after config changes
         this.updateAIStatus();
-        setInterval(() => this.updateAIStatus(), 10000); // Every 10s
     },
 
     setupAIButtons() {
@@ -259,12 +258,13 @@ const AI_HANDLERS = {
             aiChatTab.addEventListener('click', () => {
                 setTimeout(() => {
                     if (this.chatInput) this.chatInput.focus();
-                }, 100);
+                }, TIMING.CHAT_FOCUS_DELAY);
             });
         }
     },
 
     showConfigModal() {
+        this.updateAIStatus();
         showModal('Configure AI', `
             <div class="form-group">
                 <label>AI Provider</label>
@@ -339,7 +339,7 @@ const AI_HANDLERS = {
             { text: 'Guardar Configuración', class: 'btn-primary', action: () => this.saveAIConfig() }
         ]);
 
-        setTimeout(() => this.bindConfigEvents(), 50);
+        setTimeout(() => this.bindConfigEvents(), TIMING.MODAL_INIT_DELAY);
     },
 
     bindConfigEvents() {
@@ -464,8 +464,18 @@ const AI_HANDLERS = {
         const groqModel = document.getElementById('aiModelSelect')?.value;
         const openrouterApiKey = document.getElementById('aiOpenRouterKeyInput')?.value;
         const openrouterModel = document.getElementById('aiOpenRouterModelSelect')?.value;
-        const lmStudioUrl = document.getElementById('aiLmUrlInput')?.value;
+        const lmStudioUrl = document.getElementById('aiLmUrlInput')?.value?.trim();
         const lmStudioModel = document.getElementById('aiLmModelSelect')?.value;
+
+        // P.BAJA-4: validate LM Studio URL before saving
+        if (provider === 'lmstudio' && lmStudioUrl) {
+            try {
+                new URL(lmStudioUrl);
+            } catch {
+                showToast('URL de LM Studio inválida. Usa el formato: http://localhost:1234', 'error');
+                return;
+            }
+        }
 
         await AI_API.updateConfig({
             provider,

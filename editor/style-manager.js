@@ -49,12 +49,35 @@ const STYLE_MANAGER = {
                     open: false,
                     properties: [
                         { type: 'select', name: 'Font Family', property: 'font-family', options: [
-                            { value: "'Segoe UI', Inter, Arial, sans-serif", name: 'System Default' },
-                            { value: 'Inter, sans-serif', name: 'Inter' },
-                            { value: 'Arial, sans-serif', name: 'Arial' },
-                            { value: 'Helvetica, sans-serif', name: 'Helvetica' },
-                            { value: 'Times New Roman, serif', name: 'Times' },
-                            { value: 'Courier New, monospace', name: 'Courier' }
+                            { value: "'Segoe UI', Arial, sans-serif",               name: 'Segoe UI' },
+                            { value: 'Arial, Helvetica, sans-serif',                name: 'Arial' },
+                            { value: "'Arial Black', Gadget, sans-serif",           name: 'Arial Black' },
+                            { value: 'Bahnschrift, sans-serif',                     name: 'Bahnschrift' },
+                            { value: 'Calibri, Candara, sans-serif',               name: 'Calibri' },
+                            { value: "'Cambria', Georgia, serif",                   name: 'Cambria' },
+                            { value: 'Candara, Calibri, sans-serif',               name: 'Candara' },
+                            { value: "'Century Gothic', 'Avant Garde', sans-serif", name: 'Century Gothic' },
+                            { value: "'Comic Sans MS', cursive",                    name: 'Comic Sans MS' },
+                            { value: 'Consolas, monospace',                         name: 'Consolas' },
+                            { value: 'Constantia, Georgia, serif',                  name: 'Constantia' },
+                            { value: 'Corbel, Calibri, sans-serif',                name: 'Corbel' },
+                            { value: "'Courier New', Courier, monospace",           name: 'Courier New' },
+                            { value: "'Franklin Gothic Medium', sans-serif",        name: 'Franklin Gothic Medium' },
+                            { value: 'Gabriola, serif',                             name: 'Gabriola' },
+                            { value: 'Georgia, serif',                              name: 'Georgia' },
+                            { value: 'Helvetica, Arial, sans-serif',                name: 'Helvetica' },
+                            { value: 'Impact, Charcoal, sans-serif',               name: 'Impact' },
+                            { value: "'Lucida Console', Monaco, monospace",         name: 'Lucida Console' },
+                            { value: "'Lucida Sans Unicode', 'Lucida Grande', sans-serif", name: 'Lucida Sans Unicode' },
+                            { value: "'Microsoft Sans Serif', sans-serif",          name: 'Microsoft Sans Serif' },
+                            { value: "'Palatino Linotype', 'Book Antiqua', serif",  name: 'Palatino Linotype' },
+                            { value: "'Segoe Print', cursive",                      name: 'Segoe Script' },
+                            { value: 'Sitka, Georgia, serif',                       name: 'Sitka' },
+                            { value: 'Sylfaen, serif',                              name: 'Sylfaen' },
+                            { value: 'Tahoma, Geneva, sans-serif',                  name: 'Tahoma' },
+                            { value: "'Times New Roman', Times, serif",             name: 'Times New Roman' },
+                            { value: "'Trebuchet MS', Helvetica, sans-serif",       name: 'Trebuchet MS' },
+                            { value: 'Verdana, Geneva, sans-serif',                 name: 'Verdana' },
                         ]},
                         { type: 'integer', name: 'Font Size', property: 'font-size', units: ['px', 'pt', 'em'] },
                         { type: 'integer', name: 'Font Weight', property: 'font-weight', step: 100, min: 100, max: 900 },
@@ -122,83 +145,8 @@ const STYLE_MANAGER = {
         };
     },
 
-    isSyncing: false,
-
-    init(editor) {
-        console.log('[Style Manager] Initializing sync listeners...');
-
-        // 1. Sincronizar propiedades de estilo a atributos MJML
-        editor.on('style:property:update', (prop) => {
-            if (this.isSyncing) return;
-            
-            // GrapesJS puede devolver un modelo o un objeto plano
-            const propertyId = prop.getId ? prop.getId() : (prop.property || prop.id);
-            const value = prop.getValue ? prop.getValue() : (prop.value);
-            
-            if (!propertyId) return;
-
-            const mjmlMap = {
-                'text-align': 'align',
-                'background-color': 'background-color',
-                'color': 'color',
-                'font-size': 'font-size',
-                'padding': 'padding',
-                'width': 'width',
-                'height': 'height'
-            };
-
-            if (mjmlMap[propertyId]) {
-                this.isSyncing = true;
-                const attrName = mjmlMap[propertyId];
-                this.applyMjmlAttribute(editor, value, attrName);
-                this.isSyncing = false;
-            }
-        });
-
-        // 2. Especial para alineación (que a veces se resiste)
-        editor.on('component:update:style', (component) => {
-            if (this.isSyncing) return;
-            const style = component.getStyle();
-            if (style['text-align']) {
-                this.isSyncing = true;
-                this.applyMjmlAttribute(editor, style['text-align'], 'align', component);
-                this.isSyncing = false;
-            }
-        });
-    },
-
-    isSyncing: false,
-
-    applyMjmlAttribute(editor, value, attrName, target = null) {
-        if (this.isSyncing || !value) return;
-        
-        const component = target || editor.getSelected();
-        if (!component) return;
-
-        this.isSyncing = true;
-        try {
-            const type = component.get('type');
-            const attrs = component.getAttributes();
-            
-            // Si el atributo ya es igual, no hacemos nada (evitar bucles)
-            if (attrs[attrName] === value) return;
-
-            // Manejo especial para secciones que usan 'text-align' en lugar de 'align'
-            let finalAttr = attrName;
-            if (attrName === 'align' && type === 'mj-section') {
-                finalAttr = 'text-align';
-            }
-
-            console.log(`[Style Sync] Sincronizando ${finalAttr}=${value} para ${type}`);
-            component.addAttributes({ [finalAttr]: value });
-            
-            if (window.updateEmailSize) {
-                clearTimeout(window._syncSizeTimeout);
-                window._syncSizeTimeout = setTimeout(window.updateEmailSize, 300);
-            }
-        } finally {
-            this.isSyncing = false;
-        }
+    init(_editor) {
+        // Reserved for future sync listeners
     },
 };
 

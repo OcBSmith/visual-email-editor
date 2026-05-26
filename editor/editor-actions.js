@@ -8,6 +8,7 @@ const EDITOR_ACTIONS = {
         this.bindPreviewButton();
         this.bindViewCodeButton();
         this.bindInsertEmailButton();
+        this.bindExtraButtons();
     },
 
     bindSaveTemplateButton() {
@@ -31,7 +32,7 @@ const EDITOR_ACTIONS = {
 
     async saveCurrentTemplate() {
         const name = document.getElementById('templateName')?.value.trim();
-        
+
         if (!name) {
             showToast('Please enter a template name', 'warning');
             return;
@@ -39,16 +40,20 @@ const EDITOR_ACTIONS = {
 
         try {
             const mjml = await IMPORT_EXPORT.getMjml();
-            const templates = this.getSavedTemplates();
-            
-            templates.unshift({
-                name: name,
-                mjml: mjml,
-                date: new Date().toLocaleDateString()
-            });
+            const templates = await this.getSavedTemplates();
 
-            localStorage.setItem('savedTemplates', JSON.stringify(templates));
-            showToast(`Template "${name}" saved`, 'success');
+            // P.ALTA-4: prevent duplicate names (update existing instead of duplicating)
+            const existingIndex = templates.findIndex(t => t.name === name);
+            const entry = { name, mjml, date: new Date().toLocaleDateString() };
+            if (existingIndex >= 0) {
+                templates[existingIndex] = entry;
+                showToast(`Template "${name}" updated`, 'success');
+            } else {
+                templates.unshift(entry);
+                showToast(`Template "${name}" saved`, 'success');
+            }
+
+            await browser.storage.local.set({ savedTemplates: templates });
             hideModal();
         } catch (e) {
             showToast('Error saving template: ' + e.message, 'error');
@@ -89,6 +94,27 @@ const EDITOR_ACTIONS = {
         if (btnInsertEmail) {
             btnInsertEmail.addEventListener('click', () => this.insertEmail());
         }
+    },
+
+    bindExtraButtons() {
+        document.getElementById('btnAutosaveHistory')?.addEventListener('click', () => {
+            if (window.AUTO_SAVE) AUTO_SAVE.showHistoryModal();
+        });
+        document.getElementById('btnBrandColors')?.addEventListener('click', () => {
+            if (window.BRAND_COLORS) BRAND_COLORS.showModal();
+        });
+        document.getElementById('btnVariables')?.addEventListener('click', () => {
+            if (window.VARIABLES) VARIABLES.showInsertModal();
+        });
+        document.getElementById('btnSpamRules')?.addEventListener('click', () => {
+            if (window.SPAM_ANALYZER) SPAM_ANALYZER.showModal();
+        });
+        document.getElementById('btnUTMConfig')?.addEventListener('click', () => {
+            if (window.UTM) UTM.showConfigModal();
+        });
+        document.getElementById('btnKeyboardShortcuts')?.addEventListener('click', () => {
+            if (window.showKeyboardShortcutsModal) showKeyboardShortcutsModal();
+        });
     },
 
     showExportModal() {
@@ -138,15 +164,15 @@ const EDITOR_ACTIONS = {
             if (btnCopy) {
                 btnCopy.addEventListener('click', () => this.copyToClipboard());
             }
-        }, 50);
+        }, TIMING.MODAL_INIT_DELAY);
     },
 
     async downloadFile() {
         const format = document.getElementById('exportFormat')?.value || 'html';
-        
+
         try {
             if (format === 'html') {
-                await IMPORT_EXPORT.exportHtmlToFile();
+                await IMPORT_EXPORT.exportHtmlToFile(undefined, await this._getUtmConfig());
             } else {
                 await IMPORT_EXPORT.exportMjmlToFile();
             }
@@ -154,6 +180,12 @@ const EDITOR_ACTIONS = {
         } catch (e) {
             showToast('Error exporting: ' + e.message, 'error');
         }
+    },
+
+    async _getUtmConfig() {
+        if (!window.UTM) return null;
+        const cfg = await UTM.getConfig();
+        return (cfg.source || cfg.campaign) ? cfg : null;
     },
 
     async copyToClipboard() {
@@ -171,9 +203,9 @@ const EDITOR_ACTIONS = {
         }
     },
 
-    showSavedTemplatesModal() {
-        const templates = this.getSavedTemplates();
-        
+    async showSavedTemplatesModal() {
+        const templates = await this.getSavedTemplates();
+
         if (templates.length === 0) {
             showModal('Saved Templates', `
                 <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
@@ -205,7 +237,6 @@ const EDITOR_ACTIONS = {
             { text: 'Close', primary: false, action: hideModal }
         ]);
 
-        // Attach listeners manually (More robust than inline onclick)
         setTimeout(() => {
             const list = document.getElementById('savedTemplatesList');
             if (list) {
@@ -216,36 +247,45 @@ const EDITOR_ACTIONS = {
                     btn.addEventListener('click', () => this.deleteTemplate(parseInt(btn.getAttribute('data-index'))));
                 });
             }
-        }, 50);
+        }, TIMING.MODAL_INIT_DELAY);
     },
 
-    getSavedTemplates() {
+    async getSavedTemplates() {
         try {
-            const saved = localStorage.getItem('savedTemplates');
-            return saved ? JSON.parse(saved) : [];
+            const result = await browser.storage.local.get('savedTemplates');
+            return result.savedTemplates || [];
         } catch {
             return [];
         }
     },
 
-    loadTemplate(index) {
-        const templates = this.getSavedTemplates();
+    async loadTemplate(index) {
+        const templates = await this.getSavedTemplates();
         const template = templates[index];
-        
-        if (template && window.editor) {
-            window.editor.setComponents(template.mjml);
-            showToast(`Template "${template.name}" loaded`, 'success');
-            hideModal();
-        }
+
+        if (!template || !window.editor) return;
+
+        // P.ALTA-3: confirm before replacing current work
+        showModal('Load Template', `
+            <p>Load "<strong>${escapeHtml(template.name)}</strong>"?</p>
+            <p style="color: var(--text-muted); font-size: 13px; margin-top: 8px;">Unsaved changes to the current design will be lost.</p>
+        `, [
+            { text: 'Cancel', primary: false, action: hideModal },
+            { text: 'Load', primary: true, action: () => {
+                window.editor.setComponents(template.mjml);
+                showToast(`Template "${template.name}" loaded`, 'success');
+                hideModal();
+            }}
+        ]);
     },
 
-    deleteTemplate(index) {
-        const templates = this.getSavedTemplates();
+    async deleteTemplate(index) {
+        const templates = await this.getSavedTemplates();
         const name = templates[index]?.name;
-        
+
         templates.splice(index, 1);
-        localStorage.setItem('savedTemplates', JSON.stringify(templates));
-        
+        await browser.storage.local.set({ savedTemplates: templates });
+
         showToast(`Template "${name}" deleted`, 'success');
         this.showSavedTemplatesModal();
     },
@@ -294,7 +334,7 @@ const EDITOR_ACTIONS = {
                 formatSelect.addEventListener('change', () => this.updateCodePreview());
             }
             this.updateCodePreview();
-        }, 100);
+        }, TIMING.CODE_VIEW_DELAY);
     },
 
     async updateCodePreview() {
@@ -334,12 +374,121 @@ const EDITOR_ACTIONS = {
     },
 
 
+    async _fetchAsBase64(url, timeoutMs = 8000) {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+        try {
+            const res = await fetch(url, { signal: ctrl.signal });
+            clearTimeout(tid);
+            if (!res.ok) return null;
+            const blob = await res.blob();
+            return await new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = () => resolve(r.result);
+                r.onerror = reject;
+                r.readAsDataURL(blob);
+            });
+        } catch (e) {
+            clearTimeout(tid);
+            return null;
+        }
+    },
+
+    async inlineFonts(html) {
+        // Handle @import url(Google Fonts) → fetch the CSS → inline each font file as base64
+        const importRx = /@import\s+url\(\s*['"]?(https:\/\/fonts\.googleapis\.com[^'")\s]+)['"]?\s*\)\s*;?/gi;
+        const importMatches = [...html.matchAll(importRx)];
+
+        for (const match of importMatches) {
+            const [fullImport, cssUrl] = [match[0], match[1]];
+            try {
+                const ctrl = new AbortController();
+                const tid = setTimeout(() => ctrl.abort(), 8000);
+                const res = await fetch(cssUrl, { signal: ctrl.signal });
+                clearTimeout(tid);
+                if (!res.ok) continue;
+                let fontCss = await res.text();
+
+                // Inline each font file referenced in the Google Fonts CSS
+                const fontUrls = [...new Set(
+                    [...fontCss.matchAll(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+)\)/gi)].map(m => m[1])
+                )];
+
+                const b64 = {};
+                await Promise.all(fontUrls.map(async url => {
+                    const data = await this._fetchAsBase64(url);
+                    if (data) b64[url] = data;
+                }));
+
+                fontCss = fontCss.replace(
+                    /url\((https:\/\/fonts\.gstatic\.com\/[^)]+)\)/gi,
+                    (m, u) => b64[u] ? `url("${b64[u]}")` : m
+                );
+
+                html = html.replace(fullImport, fontCss);
+            } catch (e) {
+                console.warn('[inlineFonts] No se pudo obtener Google Fonts:', cssUrl, e.message);
+            }
+        }
+
+        // Handle direct @font-face src URLs (non-Google Fonts)
+        const directUrls = [...new Set(
+            [...html.matchAll(/url\(['"]?(https?:\/\/[^'")\s]+\.(?:woff2?|ttf|otf|eot))['"]?\)/gi)].map(m => m[1])
+        )];
+
+        if (directUrls.length > 0) {
+            const b64Map = {};
+            await Promise.all(directUrls.map(async url => {
+                const data = await this._fetchAsBase64(url);
+                if (data) b64Map[url] = data;
+            }));
+            html = html.replace(
+                /url\(['"]?(https?:\/\/[^'")\s]+\.(?:woff2?|ttf|otf|eot))['"]?\)/gi,
+                (m, url) => b64Map[url] ? `url("${b64Map[url]}")` : m
+            );
+        }
+
+        return html;
+    },
+
+    async inlineImages(html) {
+        const srcRx = /src="(https?:\/\/[^"]+)"/gi;
+        const urls = [...new Set([...html.matchAll(srcRx)].map(m => m[1]))];
+        if (urls.length === 0) return html;
+
+        const b64Map = {};
+        await Promise.all(urls.map(async (url) => {
+            try {
+                const controller = new AbortController();
+                const tid = setTimeout(() => controller.abort(), 5000);
+                const res = await fetch(url, { signal: controller.signal });
+                clearTimeout(tid);
+                if (!res.ok) return;
+                const blob = await res.blob();
+                b64Map[url] = await new Promise((resolve, reject) => {
+                    const r = new FileReader();
+                    r.onload = () => resolve(r.result);
+                    r.onerror = reject;
+                    r.readAsDataURL(blob);
+                });
+            } catch (e) {
+                console.warn('[insertEmail] No se pudo incrustar imagen:', url, e.message);
+            }
+        }));
+
+        return html.replace(/src="(https?:\/\/[^"]+)"/gi, (match, url) =>
+            b64Map[url] ? `src="${b64Map[url]}"` : match
+        );
+    },
+
     async insertEmail() {
         try {
-            const html = await IMPORT_EXPORT.getCompiledHtml();
-            
+            let html = await IMPORT_EXPORT.getCompiledHtml();
+
             showToast('Preparando email para Thunderbird...', 'info');
-            
+
+            html = await this.inlineImages(html);
+
             const response = await browser.runtime.sendMessage({
                 action: "insertHtmlToCompose",
                 html: html
