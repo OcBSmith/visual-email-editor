@@ -15,10 +15,9 @@ const AI_HANDLERS = {
         
         // Wait for AI_API to load from storage
         await AI_API.init();
-        
-        // Start periodic health check
+
+        // One-time health check on init; subsequent checks happen only after config changes
         this.updateAIStatus();
-        setInterval(() => this.updateAIStatus(), 10000); // Every 10s
     },
 
     setupAIButtons() {
@@ -265,6 +264,7 @@ const AI_HANDLERS = {
     },
 
     showConfigModal() {
+        this.updateAIStatus();
         showModal('Configure AI', `
             <div class="form-group">
                 <label>AI Provider</label>

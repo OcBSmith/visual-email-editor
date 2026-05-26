@@ -31,26 +31,23 @@ const IMPORT_EXPORT = {
     healComponent(comp) {
         const attrs = { ...comp.getAttributes() };
         let modifiedAttrs = false;
-        
+
         const type = comp.get('type');
-        
-        // Mj-text y Mj-button NO soportan text-align nativo, sólo align.
+
+        // mj-text, mj-button, mj-image don't support text-align as an MJML attribute
         if (type === 'mj-text' || type === 'mj-button' || type === 'mj-image') {
             if (attrs['text-align']) {
                 delete attrs['text-align'];
                 modifiedAttrs = true;
             }
         }
-        
+
         if (modifiedAttrs) {
             comp.set('attributes', attrs);
         }
-        
-        // Limpiar ETIQUETAS Y ESTILOS DE CSS CATASTRÓFICOS (como 'align' en css, que MJML odia)
-        const style = comp.getStyle();
-        if (style && style['align']) {
-            comp.removeStyle('align');
-        }
+
+        // NOTA: NO eliminar style['align'] — el plugin grapesjs-mjml lo usa internamente
+        // para almacenar el atributo MJML align en el modelo de GrapesJS.
 
         // Recursión para los hijos
         const components = comp.components();
@@ -63,7 +60,7 @@ const IMPORT_EXPORT = {
         if (!window.editor) throw new Error('Editor not initialized');
         
         try {
-            console.log('[COMPILACIÓN V5] Iniciando proceso de curación y exportación...');
+            console.log('[Import/Export] Compiling MJML...');
             
             // 1. EL GRAN SANADOR (The Great Healer)
             // Las pruebas de alineación anteriores corruptieron el estado almacenado 
@@ -83,7 +80,7 @@ const IMPORT_EXPORT = {
             // 3. Si falló mjml-code-to-html con parsing failed, la librería no lo devuelve, 
             // así que tenemos que comprobar que de verdad hemos obtenido HTML
             if (fullHtml && fullHtml.length > 50 && fullHtml.includes('<html')) {
-                console.log(`[COMPILACIÓN V5] Éxito con comando mjml-code-to-html`);
+                console.log('[Import/Export] Compilation successful.');
                 
                 // Limpieza agresiva de MSO y basura de Outlook para Thunderbird
                 fullHtml = fullHtml.replace(/<!--\[if[^\]]*\]>[\s\S]*?<!\[endif\]-->/gi, '');
@@ -111,7 +108,7 @@ const IMPORT_EXPORT = {
             throw new Error('Comando terminó pero no devolvió un HTML válido.');
         } catch (e) {
 
-            console.warn('[BLOQUEO V5] Falló compilación profesional, usando súper-limpieza manual de emergencia...', e);
+            console.warn('[Import/Export] MJML compilation failed, falling back to raw HTML cleanup.', e);
             
             // Si GrapesJS falla por completo en darnos el HTML compilado, sacamos la versión pura serializada
             // y limpiamos TODAS las etiquetas MJML para que Thunderbird no las vea

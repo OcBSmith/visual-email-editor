@@ -43,11 +43,20 @@ const TEMPLATE_UI = {
 
     loadTemplate(id) {
         const template = TEMPLATE_LIBRARY.find(t => t.id === id);
-        if (template && window.editor) {
-            window.editor.setComponents(template.mjml);
-            hideModal();
-            showToast(`Template loaded: ${template.name}`);
-        }
+        if (!template || !window.editor) return;
+
+        // P.ALTA-3: confirm before replacing current work
+        showModal('Load Template', `
+            <p>Load "<strong>${escapeHtml(template.name)}</strong>"?</p>
+            <p style="color: var(--text-muted); font-size: 13px; margin-top: 8px;">Unsaved changes to the current design will be lost.</p>
+        `, [
+            { text: 'Cancel', primary: false, action: () => this.showTemplateModal() },
+            { text: 'Load', primary: true, action: () => {
+                window.editor.setComponents(template.mjml);
+                showToast(`Template loaded: ${template.name}`);
+                hideModal();
+            }}
+        ]);
     }
 };
 

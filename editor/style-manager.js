@@ -122,83 +122,8 @@ const STYLE_MANAGER = {
         };
     },
 
-    isSyncing: false,
-
-    init(editor) {
-        console.log('[Style Manager] Initializing sync listeners...');
-
-        // 1. Sincronizar propiedades de estilo a atributos MJML
-        editor.on('style:property:update', (prop) => {
-            if (this.isSyncing) return;
-            
-            // GrapesJS puede devolver un modelo o un objeto plano
-            const propertyId = prop.getId ? prop.getId() : (prop.property || prop.id);
-            const value = prop.getValue ? prop.getValue() : (prop.value);
-            
-            if (!propertyId) return;
-
-            const mjmlMap = {
-                'text-align': 'align',
-                'background-color': 'background-color',
-                'color': 'color',
-                'font-size': 'font-size',
-                'padding': 'padding',
-                'width': 'width',
-                'height': 'height'
-            };
-
-            if (mjmlMap[propertyId]) {
-                this.isSyncing = true;
-                const attrName = mjmlMap[propertyId];
-                this.applyMjmlAttribute(editor, value, attrName);
-                this.isSyncing = false;
-            }
-        });
-
-        // 2. Especial para alineación (que a veces se resiste)
-        editor.on('component:update:style', (component) => {
-            if (this.isSyncing) return;
-            const style = component.getStyle();
-            if (style['text-align']) {
-                this.isSyncing = true;
-                this.applyMjmlAttribute(editor, style['text-align'], 'align', component);
-                this.isSyncing = false;
-            }
-        });
-    },
-
-    isSyncing: false,
-
-    applyMjmlAttribute(editor, value, attrName, target = null) {
-        if (this.isSyncing || !value) return;
-        
-        const component = target || editor.getSelected();
-        if (!component) return;
-
-        this.isSyncing = true;
-        try {
-            const type = component.get('type');
-            const attrs = component.getAttributes();
-            
-            // Si el atributo ya es igual, no hacemos nada (evitar bucles)
-            if (attrs[attrName] === value) return;
-
-            // Manejo especial para secciones que usan 'text-align' en lugar de 'align'
-            let finalAttr = attrName;
-            if (attrName === 'align' && type === 'mj-section') {
-                finalAttr = 'text-align';
-            }
-
-            console.log(`[Style Sync] Sincronizando ${finalAttr}=${value} para ${type}`);
-            component.addAttributes({ [finalAttr]: value });
-            
-            if (window.updateEmailSize) {
-                clearTimeout(window._syncSizeTimeout);
-                window._syncSizeTimeout = setTimeout(window.updateEmailSize, 300);
-            }
-        } finally {
-            this.isSyncing = false;
-        }
+    init(_editor) {
+        // Reserved for future sync listeners
     },
 };
 

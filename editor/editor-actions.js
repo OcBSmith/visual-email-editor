@@ -31,7 +31,7 @@ const EDITOR_ACTIONS = {
 
     async saveCurrentTemplate() {
         const name = document.getElementById('templateName')?.value.trim();
-        
+
         if (!name) {
             showToast('Please enter a template name', 'warning');
             return;
@@ -39,16 +39,20 @@ const EDITOR_ACTIONS = {
 
         try {
             const mjml = await IMPORT_EXPORT.getMjml();
-            const templates = this.getSavedTemplates();
-            
-            templates.unshift({
-                name: name,
-                mjml: mjml,
-                date: new Date().toLocaleDateString()
-            });
+            const templates = await this.getSavedTemplates();
 
-            localStorage.setItem('savedTemplates', JSON.stringify(templates));
-            showToast(`Template "${name}" saved`, 'success');
+            // P.ALTA-4: prevent duplicate names (update existing instead of duplicating)
+            const existingIndex = templates.findIndex(t => t.name === name);
+            const entry = { name, mjml, date: new Date().toLocaleDateString() };
+            if (existingIndex >= 0) {
+                templates[existingIndex] = entry;
+                showToast(`Template "${name}" updated`, 'success');
+            } else {
+                templates.unshift(entry);
+                showToast(`Template "${name}" saved`, 'success');
+            }
+
+            await browser.storage.local.set({ savedTemplates: templates });
             hideModal();
         } catch (e) {
             showToast('Error saving template: ' + e.message, 'error');
@@ -171,9 +175,9 @@ const EDITOR_ACTIONS = {
         }
     },
 
-    showSavedTemplatesModal() {
-        const templates = this.getSavedTemplates();
-        
+    async showSavedTemplatesModal() {
+        const templates = await this.getSavedTemplates();
+
         if (templates.length === 0) {
             showModal('Saved Templates', `
                 <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
@@ -205,7 +209,6 @@ const EDITOR_ACTIONS = {
             { text: 'Close', primary: false, action: hideModal }
         ]);
 
-        // Attach listeners manually (More robust than inline onclick)
         setTimeout(() => {
             const list = document.getElementById('savedTemplatesList');
             if (list) {
@@ -219,33 +222,42 @@ const EDITOR_ACTIONS = {
         }, 50);
     },
 
-    getSavedTemplates() {
+    async getSavedTemplates() {
         try {
-            const saved = localStorage.getItem('savedTemplates');
-            return saved ? JSON.parse(saved) : [];
+            const result = await browser.storage.local.get('savedTemplates');
+            return result.savedTemplates || [];
         } catch {
             return [];
         }
     },
 
-    loadTemplate(index) {
-        const templates = this.getSavedTemplates();
+    async loadTemplate(index) {
+        const templates = await this.getSavedTemplates();
         const template = templates[index];
-        
-        if (template && window.editor) {
-            window.editor.setComponents(template.mjml);
-            showToast(`Template "${template.name}" loaded`, 'success');
-            hideModal();
-        }
+
+        if (!template || !window.editor) return;
+
+        // P.ALTA-3: confirm before replacing current work
+        showModal('Load Template', `
+            <p>Load "<strong>${escapeHtml(template.name)}</strong>"?</p>
+            <p style="color: var(--text-muted); font-size: 13px; margin-top: 8px;">Unsaved changes to the current design will be lost.</p>
+        `, [
+            { text: 'Cancel', primary: false, action: hideModal },
+            { text: 'Load', primary: true, action: () => {
+                window.editor.setComponents(template.mjml);
+                showToast(`Template "${template.name}" loaded`, 'success');
+                hideModal();
+            }}
+        ]);
     },
 
-    deleteTemplate(index) {
-        const templates = this.getSavedTemplates();
+    async deleteTemplate(index) {
+        const templates = await this.getSavedTemplates();
         const name = templates[index]?.name;
-        
+
         templates.splice(index, 1);
-        localStorage.setItem('savedTemplates', JSON.stringify(templates));
-        
+        await browser.storage.local.set({ savedTemplates: templates });
+
         showToast(`Template "${name}" deleted`, 'success');
         this.showSavedTemplatesModal();
     },
