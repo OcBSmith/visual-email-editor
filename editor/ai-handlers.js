@@ -258,7 +258,7 @@ const AI_HANDLERS = {
             aiChatTab.addEventListener('click', () => {
                 setTimeout(() => {
                     if (this.chatInput) this.chatInput.focus();
-                }, 100);
+                }, TIMING.CHAT_FOCUS_DELAY);
             });
         }
     },
@@ -339,7 +339,7 @@ const AI_HANDLERS = {
             { text: 'Guardar Configuración', class: 'btn-primary', action: () => this.saveAIConfig() }
         ]);
 
-        setTimeout(() => this.bindConfigEvents(), 50);
+        setTimeout(() => this.bindConfigEvents(), TIMING.MODAL_INIT_DELAY);
     },
 
     bindConfigEvents() {
@@ -464,8 +464,18 @@ const AI_HANDLERS = {
         const groqModel = document.getElementById('aiModelSelect')?.value;
         const openrouterApiKey = document.getElementById('aiOpenRouterKeyInput')?.value;
         const openrouterModel = document.getElementById('aiOpenRouterModelSelect')?.value;
-        const lmStudioUrl = document.getElementById('aiLmUrlInput')?.value;
+        const lmStudioUrl = document.getElementById('aiLmUrlInput')?.value?.trim();
         const lmStudioModel = document.getElementById('aiLmModelSelect')?.value;
+
+        // P.BAJA-4: validate LM Studio URL before saving
+        if (provider === 'lmstudio' && lmStudioUrl) {
+            try {
+                new URL(lmStudioUrl);
+            } catch {
+                showToast('URL de LM Studio inválida. Usa el formato: http://localhost:1234', 'error');
+                return;
+            }
+        }
 
         await AI_API.updateConfig({
             provider,

@@ -7,7 +7,9 @@
                         "doc":  "docs"
                     },
     "scripts":  {
-                    "test":  "jest"
+                    "test":  "jest",
+                    "lint":  "eslint editor/*.js editor/providers/*.js",
+                    "validate:manifest": "node -e \"JSON.parse(require('fs').readFileSync('manifest.json','utf8')); console.log('manifest OK')\""
                 },
     "repository":  {
                        "type":  "git",
@@ -25,6 +27,7 @@
     "homepage":  "https://github.com/OcBSmith/visual-email-editor#readme",
     "devDependencies":  {
                             "jest":  "^30.3.0",
-                            "jest-environment-jsdom":  "^30.3.0"
+                            "jest-environment-jsdom":  "^30.3.0",
+                            "eslint":  "^9.0.0"
                         }
 }

@@ -124,8 +124,7 @@ const editor = grapesjs.init({
     // Canvas configuration
     canvas: {
         styles: [
-            'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
-            'body { padding-bottom: 600px !important; max-width: none !important; }'
+            'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
         ]
     }
 });
@@ -156,7 +155,7 @@ const loadInitialTemplate = () => {
             updateEmailSize();
             syncWidthUI();
             bindWidthControl();
-        }, 500);
+        }, TIMING.INIT_DEFER);
     } catch (err) {
         console.error('Safe Load error:', err);
     }
@@ -220,7 +219,18 @@ const initCommands = () => {
 
     // Toggle Panels
     commands.add('show-layers', { run() { editor.Panels.getButton('views', 'open-layers').set('active', true); } });
-    
+
+    // Duplicate the selected component and insert it right after
+    commands.add('duplicate-component', {
+        run(ed) {
+            const sel = ed.getSelected();
+            if (!sel || sel.is('wrapper')) return;
+            const clone = sel.clone();
+            sel.collection.add(clone, { at: sel.index() + 1 });
+            showToast('Sección duplicada');
+        }
+    });
+
     console.log('[Editor] Global commands registered');
 };
 
@@ -311,8 +321,10 @@ const sizeValue = document.getElementById('sizeValue');
 
 async function updateEmailSize() {
     try {
-        const html = await IMPORT_EXPORT.getCompiledHtml();
-        const sizeBytes = new Blob([html]).size;
+        // Use serialized MJML for size estimation — avoids a full MJML→HTML compilation
+        // on every keystroke. Full compilation only happens on export/insert.
+        const mjml = await IMPORT_EXPORT.getMjml();
+        const sizeBytes = new Blob([mjml]).size;
 
         // Update display
         sizeValue.textContent = formatBytes(sizeBytes);
@@ -340,21 +352,21 @@ async function updateEmailSize() {
 let sizeUpdateTimeout;
 editor.on('component:update', () => {
     clearTimeout(sizeUpdateTimeout);
-    sizeUpdateTimeout = setTimeout(updateEmailSize, 500);
+    sizeUpdateTimeout = setTimeout(updateEmailSize, TIMING.COMPONENT_UPDATE_DEBOUNCE);
 });
 
 editor.on('component:add', () => {
     clearTimeout(sizeUpdateTimeout);
-    sizeUpdateTimeout = setTimeout(updateEmailSize, 500);
+    sizeUpdateTimeout = setTimeout(updateEmailSize, TIMING.COMPONENT_UPDATE_DEBOUNCE);
 });
 
 editor.on('component:remove', () => {
     clearTimeout(sizeUpdateTimeout);
-    sizeUpdateTimeout = setTimeout(updateEmailSize, 500);
+    sizeUpdateTimeout = setTimeout(updateEmailSize, TIMING.COMPONENT_UPDATE_DEBOUNCE);
 });
 
 // Initial size calculation
-setTimeout(updateEmailSize, 1000);
+setTimeout(updateEmailSize, TIMING.INIT_SIZE_DELAY);
 
 // ===== NEW DESIGN =====
 document.getElementById('btnNew').addEventListener('click', () => {
@@ -422,7 +434,8 @@ const initFullEditor = () => {
     loadInitialTemplate();
 
     // 4. Tasks
-    setTimeout(updateEmailSize, 1000);
+    setTimeout(updateEmailSize, TIMING.INIT_SIZE_DELAY);
+    if (window.AUTO_SAVE) AUTO_SAVE.start();
     console.log('Visual Email Editor initialized successfully');
 };
 
@@ -433,7 +446,66 @@ if (editor.getModel().get('isLoaded')) {
     editor.once('load', initFullEditor);
 }
 
-editor.on('component:selected', () => {
+editor.on('component:selected', (model) => {
     const stylesTab = document.querySelector('[data-panel="styles"]');
     if (stylesTab) stylesTab.click();
+
+    // Add "Duplicate" button to every non-wrapper component toolbar
+    if (!model || model.is('wrapper')) return;
+    const toolbar = model.get('toolbar') || [];
+    if (toolbar.some(btn => btn.id === 'duplicate-btn')) return;
+    model.set('toolbar', [
+        ...toolbar,
+        {
+            id: 'duplicate-btn',
+            command: 'duplicate-component',
+            label: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                    </svg>`,
+            title: 'Duplicar'
+        }
+    ]);
 });
+
+// Keyboard shortcut: ? → keyboard shortcuts modal
+document.addEventListener('keydown', (e) => {
+    if (e.key === '?' && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+        showKeyboardShortcutsModal();
+    }
+});
+
+function showKeyboardShortcutsModal() {
+    const shortcuts = [
+        { keys: 'Ctrl + S', action: 'Guardar plantilla' },
+        { keys: 'Ctrl + Z', action: 'Deshacer' },
+        { keys: 'Ctrl + Y / Ctrl + Shift + Z', action: 'Rehacer' },
+        { keys: 'Supr / Backspace', action: 'Eliminar componente seleccionado' },
+        { keys: 'Ctrl + Alt + P', action: 'Alternar vista previa' },
+        { keys: 'Esc', action: 'Cerrar modal' },
+        { keys: '?', action: 'Mostrar esta ayuda' },
+    ];
+
+    showModal('Atajos de teclado', `
+        <table style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr>
+                    <th style="text-align:left; padding:8px; border-bottom:1px solid var(--border); font-size:12px; color:var(--text-secondary);">Atajo</th>
+                    <th style="text-align:left; padding:8px; border-bottom:1px solid var(--border); font-size:12px; color:var(--text-secondary);">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${shortcuts.map(s => `
+                    <tr>
+                        <td style="padding:10px 8px; border-bottom:1px solid var(--border);">
+                            <kbd style="background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:2px 6px; font-size:11px; font-family:monospace;">${s.keys}</kbd>
+                        </td>
+                        <td style="padding:10px 8px; border-bottom:1px solid var(--border); font-size:13px;">${s.action}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `, [{ text: 'Cerrar', action: hideModal }]);
+}
+
+window.showKeyboardShortcutsModal = showKeyboardShortcutsModal;

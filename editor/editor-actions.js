@@ -8,6 +8,7 @@ const EDITOR_ACTIONS = {
         this.bindPreviewButton();
         this.bindViewCodeButton();
         this.bindInsertEmailButton();
+        this.bindExtraButtons();
     },
 
     bindSaveTemplateButton() {
@@ -95,6 +96,27 @@ const EDITOR_ACTIONS = {
         }
     },
 
+    bindExtraButtons() {
+        document.getElementById('btnAutosaveHistory')?.addEventListener('click', () => {
+            if (window.AUTO_SAVE) AUTO_SAVE.showHistoryModal();
+        });
+        document.getElementById('btnBrandColors')?.addEventListener('click', () => {
+            if (window.BRAND_COLORS) BRAND_COLORS.showModal();
+        });
+        document.getElementById('btnVariables')?.addEventListener('click', () => {
+            if (window.VARIABLES) VARIABLES.showInsertModal();
+        });
+        document.getElementById('btnSpamRules')?.addEventListener('click', () => {
+            if (window.SPAM_ANALYZER) SPAM_ANALYZER.showModal();
+        });
+        document.getElementById('btnUTMConfig')?.addEventListener('click', () => {
+            if (window.UTM) UTM.showConfigModal();
+        });
+        document.getElementById('btnKeyboardShortcuts')?.addEventListener('click', () => {
+            if (window.showKeyboardShortcutsModal) showKeyboardShortcutsModal();
+        });
+    },
+
     showExportModal() {
         showModal('Export Email', `
             <div class="export-options">
@@ -142,15 +164,15 @@ const EDITOR_ACTIONS = {
             if (btnCopy) {
                 btnCopy.addEventListener('click', () => this.copyToClipboard());
             }
-        }, 50);
+        }, TIMING.MODAL_INIT_DELAY);
     },
 
     async downloadFile() {
         const format = document.getElementById('exportFormat')?.value || 'html';
-        
+
         try {
             if (format === 'html') {
-                await IMPORT_EXPORT.exportHtmlToFile();
+                await IMPORT_EXPORT.exportHtmlToFile(undefined, await this._getUtmConfig());
             } else {
                 await IMPORT_EXPORT.exportMjmlToFile();
             }
@@ -158,6 +180,12 @@ const EDITOR_ACTIONS = {
         } catch (e) {
             showToast('Error exporting: ' + e.message, 'error');
         }
+    },
+
+    async _getUtmConfig() {
+        if (!window.UTM) return null;
+        const cfg = await UTM.getConfig();
+        return (cfg.source || cfg.campaign) ? cfg : null;
     },
 
     async copyToClipboard() {
@@ -219,7 +247,7 @@ const EDITOR_ACTIONS = {
                     btn.addEventListener('click', () => this.deleteTemplate(parseInt(btn.getAttribute('data-index'))));
                 });
             }
-        }, 50);
+        }, TIMING.MODAL_INIT_DELAY);
     },
 
     async getSavedTemplates() {
@@ -306,7 +334,7 @@ const EDITOR_ACTIONS = {
                 formatSelect.addEventListener('change', () => this.updateCodePreview());
             }
             this.updateCodePreview();
-        }, 100);
+        }, TIMING.CODE_VIEW_DELAY);
     },
 
     async updateCodePreview() {
@@ -346,12 +374,121 @@ const EDITOR_ACTIONS = {
     },
 
 
+    async _fetchAsBase64(url, timeoutMs = 8000) {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+        try {
+            const res = await fetch(url, { signal: ctrl.signal });
+            clearTimeout(tid);
+            if (!res.ok) return null;
+            const blob = await res.blob();
+            return await new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = () => resolve(r.result);
+                r.onerror = reject;
+                r.readAsDataURL(blob);
+            });
+        } catch (e) {
+            clearTimeout(tid);
+            return null;
+        }
+    },
+
+    async inlineFonts(html) {
+        // Handle @import url(Google Fonts) → fetch the CSS → inline each font file as base64
+        const importRx = /@import\s+url\(\s*['"]?(https:\/\/fonts\.googleapis\.com[^'")\s]+)['"]?\s*\)\s*;?/gi;
+        const importMatches = [...html.matchAll(importRx)];
+
+        for (const match of importMatches) {
+            const [fullImport, cssUrl] = [match[0], match[1]];
+            try {
+                const ctrl = new AbortController();
+                const tid = setTimeout(() => ctrl.abort(), 8000);
+                const res = await fetch(cssUrl, { signal: ctrl.signal });
+                clearTimeout(tid);
+                if (!res.ok) continue;
+                let fontCss = await res.text();
+
+                // Inline each font file referenced in the Google Fonts CSS
+                const fontUrls = [...new Set(
+                    [...fontCss.matchAll(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+)\)/gi)].map(m => m[1])
+                )];
+
+                const b64 = {};
+                await Promise.all(fontUrls.map(async url => {
+                    const data = await this._fetchAsBase64(url);
+                    if (data) b64[url] = data;
+                }));
+
+                fontCss = fontCss.replace(
+                    /url\((https:\/\/fonts\.gstatic\.com\/[^)]+)\)/gi,
+                    (m, u) => b64[u] ? `url("${b64[u]}")` : m
+                );
+
+                html = html.replace(fullImport, fontCss);
+            } catch (e) {
+                console.warn('[inlineFonts] No se pudo obtener Google Fonts:', cssUrl, e.message);
+            }
+        }
+
+        // Handle direct @font-face src URLs (non-Google Fonts)
+        const directUrls = [...new Set(
+            [...html.matchAll(/url\(['"]?(https?:\/\/[^'")\s]+\.(?:woff2?|ttf|otf|eot))['"]?\)/gi)].map(m => m[1])
+        )];
+
+        if (directUrls.length > 0) {
+            const b64Map = {};
+            await Promise.all(directUrls.map(async url => {
+                const data = await this._fetchAsBase64(url);
+                if (data) b64Map[url] = data;
+            }));
+            html = html.replace(
+                /url\(['"]?(https?:\/\/[^'")\s]+\.(?:woff2?|ttf|otf|eot))['"]?\)/gi,
+                (m, url) => b64Map[url] ? `url("${b64Map[url]}")` : m
+            );
+        }
+
+        return html;
+    },
+
+    async inlineImages(html) {
+        const srcRx = /src="(https?:\/\/[^"]+)"/gi;
+        const urls = [...new Set([...html.matchAll(srcRx)].map(m => m[1]))];
+        if (urls.length === 0) return html;
+
+        const b64Map = {};
+        await Promise.all(urls.map(async (url) => {
+            try {
+                const controller = new AbortController();
+                const tid = setTimeout(() => controller.abort(), 5000);
+                const res = await fetch(url, { signal: controller.signal });
+                clearTimeout(tid);
+                if (!res.ok) return;
+                const blob = await res.blob();
+                b64Map[url] = await new Promise((resolve, reject) => {
+                    const r = new FileReader();
+                    r.onload = () => resolve(r.result);
+                    r.onerror = reject;
+                    r.readAsDataURL(blob);
+                });
+            } catch (e) {
+                console.warn('[insertEmail] No se pudo incrustar imagen:', url, e.message);
+            }
+        }));
+
+        return html.replace(/src="(https?:\/\/[^"]+)"/gi, (match, url) =>
+            b64Map[url] ? `src="${b64Map[url]}"` : match
+        );
+    },
+
     async insertEmail() {
         try {
-            const html = await IMPORT_EXPORT.getCompiledHtml();
-            
+            let html = await IMPORT_EXPORT.getCompiledHtml();
+
             showToast('Preparando email para Thunderbird...', 'info');
-            
+
+            html = await this.inlineImages(html);
+
             const response = await browser.runtime.sendMessage({
                 action: "insertHtmlToCompose",
                 html: html

@@ -221,9 +221,10 @@ const IMPORT_EXPORT = {
         }, 50);
     },
 
-    async exportHtmlToFile(filename = 'email.html') {
+    async exportHtmlToFile(filename = 'email.html', utmParams = null) {
         try {
-            const html = await this.getCompiledHtml();
+            let html = await this.getCompiledHtml();
+            if (utmParams && window.UTM) html = UTM.applyToHtml(html, utmParams);
             const blob = new Blob([html], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             

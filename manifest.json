@@ -8,7 +8,8 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "visual-email-editor@thunderbird-addons",
-      "strict_min_version": "115.0"
+      "strict_min_version": "115.0",
+      "strict_max_version": "999.*"
     }
   },
   "icons": {
@@ -21,7 +22,8 @@
   "permissions": [
     "compose",
     "tabs",
-    "storage"
+    "storage",
+    "<all_urls>"
   ],
   "background": {
     "scripts": [
@@ -36,6 +38,8 @@
     }
   },
   "web_accessible_resources": [
-    "editor/*"
+    "editor/index.html",
+    "editor/lib/*",
+    "icons/*"
   ]
 }
